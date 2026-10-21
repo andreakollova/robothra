@@ -721,12 +721,13 @@ export const OBJECT_PLACEMENTS: ObjectPlacement[] = [
   { objectId: 'rb10', roomId: 'rb_workshop', x: rb_workshop_x + T * 7, y: rb_workshop_y + T * 7.5 },
   { objectId: 'rb11', roomId: 'rb_workshop', x: rb_workshop_x + T * 10, y: rb_workshop_y + T * 7.5 },
 
-  { objectId: 'rb03', roomId: 'rb_display', x: rb_display_x + T * 2.5, y: rb_display_y + T * 4 },
-  { objectId: 'rb04', roomId: 'rb_display', x: rb_display_x + T * 5, y: rb_display_y + T * 4 },
-  { objectId: 'rb05', roomId: 'rb_display', x: rb_display_x + T * 8, y: rb_display_y + T * 4 },
-  { objectId: 'rb06', roomId: 'rb_display', x: rb_display_x + T * 2.5, y: rb_display_y + T * 7.5 },
-  { objectId: 'rb07', roomId: 'rb_display', x: rb_display_x + T * 5, y: rb_display_y + T * 7.5 },
-  { objectId: 'rb08', roomId: 'rb_display', x: rb_display_x + T * 8, y: rb_display_y + T * 7.5 },
+  // Objects ON the display pedestals (pedestals at y T*1.5 and T*5, each T*2 wide/tall)
+  { objectId: 'rb03', roomId: 'rb_display', x: rb_display_x + T * 2.5, y: rb_display_y + T * 2.5 },
+  { objectId: 'rb04', roomId: 'rb_display', x: rb_display_x + T * 6, y: rb_display_y + T * 2.5 },
+  { objectId: 'rb05', roomId: 'rb_display', x: rb_display_x + T * 9.5, y: rb_display_y + T * 2.5 },
+  { objectId: 'rb06', roomId: 'rb_display', x: rb_display_x + T * 2.5, y: rb_display_y + T * 6 },
+  { objectId: 'rb07', roomId: 'rb_display', x: rb_display_x + T * 6, y: rb_display_y + T * 6 },
+  { objectId: 'rb08', roomId: 'rb_display', x: rb_display_x + T * 9.5, y: rb_display_y + T * 6 },
 
   { objectId: 'rb09', roomId: 'rb_calibration', x: rb_calibration_x + T * 3, y: rb_calibration_y + T * 5 },
   { objectId: 'rb12', roomId: 'rb_calibration', x: rb_calibration_x + T * 7, y: rb_calibration_y + T * 5 },
