@@ -44,6 +44,12 @@ export function getSpriteForObject(objectId: string): HTMLImageElement | null {
   return spriteCache[objectId] || null;
 }
 
+// NPC position for minimap
+let _npcPos = { x: 576 + 48 * 6, y: 48 * 4 };
+export function getNPCPosition(): { x: number; y: number } {
+  return _npcPos;
+}
+
 export class Renderer {
   private ctx: CanvasRenderingContext2D;
   private canvas: HTMLCanvasElement;
@@ -862,22 +868,53 @@ export class Renderer {
     ctx.restore();
   }
 
+  // NPC waypoints - Robi wanders through rooms independently
+  private npcWaypoints = [
+    { x: 576 + 48 * 6, y: 48 * 4 },       // rb_display center
+    { x: 576 + 48 * 3, y: 48 * 7 },       // rb_display bottom
+    { x: 576 * 2 + 96 + 48 * 3, y: 48 * 4 },  // rb_workshop area
+    { x: 576 * 2 + 96 + 48 * 8, y: 48 * 2 },
+    { x: 576 + 48 * 9, y: 432 + 48 * 4 }, // rb_calibration
+    { x: 576 * 2 + 96 + 48 * 6, y: 432 + 48 * 4 }, // rb_office
+    { x: 48 * 6, y: 48 * 4 },             // wr_reception
+    { x: 576 + 48 * 5, y: 48 * 4 },       // wr_exhibition
+    { x: 48 * 5, y: 432 + 48 * 4 },       // wr_history
+    { x: 576 + 48 * 6, y: 432 + 48 * 4 }, // wr_demolab
+    // corridor
+    { x: 48 * 15, y: 432 * 2 + 48 * 1.5 },
+    { x: 48 * 40, y: 432 * 2 + 48 * 1.5 },
+    // zone 3
+    { x: 48 * 6, y: 432 * 2 + 144 + 48 * 4 },
+    { x: 576 + 48 * 5, y: 432 * 2 + 144 + 48 * 4 },
+  ];
+  private npcWaypointIndex = 0;
+  private npcX = 576 + 48 * 6;
+  private npcY = 48 * 4;
+  private npcSpeed = 45; // slow wanderer
+
   private drawNPC(ctx: CanvasRenderingContext2D, state: GameState) {
-    // Buddy bot that wanders near the player, giving a sense of companionship
     const t = this.time;
 
-    // NPC follows a slow patrol pattern near the player
-    const px = state.player.x;
-    const py = state.player.y;
-    // Offset from player - orbits at distance, with some lag
-    const orbitDist = 120;
-    const orbitSpeed = 0.15;
-    const npcX = px + Math.cos(t * orbitSpeed) * orbitDist + Math.sin(t * 0.07) * 30;
-    const npcY = py + Math.sin(t * orbitSpeed) * orbitDist * 0.6 + Math.cos(t * 0.09) * 20;
+    // Move NPC toward current waypoint
+    const target = this.npcWaypoints[this.npcWaypointIndex];
+    const dx = target.x - this.npcX;
+    const dy = target.y - this.npcY;
+    const dist = Math.sqrt(dx * dx + dy * dy);
 
-    // Determine facing direction based on movement
-    const velX = -Math.sin(t * orbitSpeed) * orbitSpeed;
-    const npcDir = velX > 0 ? 'right' : 'left';
+    if (dist < 5) {
+      // Reached waypoint, go to next
+      this.npcWaypointIndex = (this.npcWaypointIndex + 1) % this.npcWaypoints.length;
+    } else {
+      // Move toward waypoint (no collision - NPC is "in its own world")
+      const step = Math.min(this.npcSpeed * 0.016, dist); // ~60fps step
+      this.npcX += (dx / dist) * step;
+      this.npcY += (dy / dist) * step;
+    }
+
+    const npcX = this.npcX;
+    const npcY = this.npcY;
+    const npcDir = dx > 0 ? 'right' : 'left';
+    _npcPos = { x: npcX, y: npcY };
 
     const breathe = Math.sin(t * 2.5) * 0.5;
     const bobble = Math.sin(t * 4) * 1;

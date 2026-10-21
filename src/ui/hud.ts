@@ -4,6 +4,7 @@ import { Camera } from '../engine/camera';
 import { GameState } from '../engine/gameState';
 import { OBJECTS, MODULE_COLORS, ModuleName } from '../data/objects';
 import { ROOMS, OBJECT_PLACEMENTS, TILE, WORLD_W, WORLD_H } from '../data/world';
+import { getNPCPosition } from '../engine/renderer';
 
 const MODULE_CIRCLE_COLORS: Record<string, string> = {
   'What is Robotics?': '#E8D44D',
@@ -85,6 +86,18 @@ export class HUD {
       ctx.arc(ox, oy, disc ? 2 : 1.5, 0, Math.PI * 2);
       ctx.fill();
     }
+
+    // NPC Robi on minimap
+    const npc = getNPCPosition();
+    const npx = mx + (npc.x + 12) * scale;
+    const npy = my + (npc.y + 12) * scale;
+    ctx.fillStyle = '#EF6C00';
+    ctx.beginPath();
+    ctx.arc(npx, npy, 2.5, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.strokeStyle = '#FFFFFF';
+    ctx.lineWidth = 0.8;
+    ctx.stroke();
 
     // Player
     const px = mx + (state.player.x + 12) * scale;
