@@ -1,0 +1,200 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Little Robot: The Learning Factory</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    html, body {
+      width: 100%;
+      height: 100%;
+      overflow: hidden;
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
+      background: #E8E4DC;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    #game-canvas {
+      display: block;
+      width: 100%;
+      height: 100%;
+      cursor: default;
+    }
+
+    #ui-overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      display: none;
+      align-items: center;
+      justify-content: center;
+      background: rgba(38, 52, 69, 0.3);
+      backdrop-filter: blur(4px);
+      -webkit-backdrop-filter: blur(4px);
+      z-index: 100;
+    }
+
+    .ui-panel {
+      background: #FFFFFF;
+      border-radius: 16px;
+      box-shadow: 0 8px 32px rgba(0, 0, 0, 0.12), 0 2px 8px rgba(0, 0, 0, 0.06);
+      overflow-y: auto;
+      animation: panelIn 0.2s ease-out;
+    }
+
+    @keyframes panelIn {
+      from {
+        opacity: 0;
+        transform: translateY(12px) scale(0.97);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+      }
+    }
+
+    .ui-btn {
+      display: inline-block;
+      padding: 10px 20px;
+      border: none;
+      border-radius: 8px;
+      font-size: 14px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.15s;
+      font-family: inherit;
+      text-align: center;
+      width: 100%;
+    }
+
+    .ui-btn.primary {
+      background: #3564D8;
+      color: #FFFFFF;
+    }
+
+    .ui-btn.primary:hover {
+      background: #2850B8;
+    }
+
+    .ui-btn.secondary {
+      background: #F0F2F5;
+      color: #627185;
+    }
+
+    .ui-btn.secondary:hover {
+      background: #E4E7EC;
+    }
+
+    .ui-btn.danger {
+      background: #FFF0F0;
+      color: #D32F2F;
+    }
+
+    .ui-btn.danger:hover {
+      background: #FFE0E0;
+    }
+
+    .ui-btn:focus {
+      outline: 2px solid #3564D8;
+      outline-offset: 2px;
+    }
+
+    .quiz-option {
+      display: flex;
+      align-items: flex-start;
+      gap: 10px;
+      padding: 12px 14px;
+      border: 1.5px solid #DCE3E8;
+      border-radius: 10px;
+      background: #FFFFFF;
+      cursor: pointer;
+      font-size: 14px;
+      color: #263445;
+      text-align: left;
+      transition: all 0.15s;
+      font-family: inherit;
+      width: 100%;
+      line-height: 1.4;
+    }
+
+    .quiz-option:hover {
+      border-color: #3564D8;
+      background: #F5F8FF;
+    }
+
+    .quiz-option.selected {
+      border-color: #3564D8;
+      background: #EEF2FF;
+    }
+
+    .quiz-option:focus {
+      outline: 2px solid #3564D8;
+      outline-offset: 1px;
+    }
+
+    .option-label {
+      font-weight: 700;
+      color: #3564D8;
+      flex-shrink: 0;
+      min-width: 20px;
+    }
+
+    .tab-btn {
+      padding: 6px 14px;
+      border: 1.5px solid #DCE3E8;
+      border-radius: 6px;
+      background: #FFFFFF;
+      font-size: 12px;
+      font-weight: 600;
+      color: #627185;
+      cursor: pointer;
+      transition: all 0.15s;
+      font-family: inherit;
+    }
+
+    .tab-btn.active {
+      background: #3564D8;
+      color: #FFFFFF;
+      border-color: #3564D8;
+    }
+
+    .tab-btn:hover:not(.active) {
+      background: #F5F8FF;
+      border-color: #3564D8;
+    }
+
+    textarea:focus {
+      border-color: #3564D8 !important;
+      box-shadow: 0 0 0 3px rgba(53, 100, 216, 0.1);
+    }
+
+    /* Scrollbar styling */
+    ::-webkit-scrollbar {
+      width: 6px;
+    }
+    ::-webkit-scrollbar-track {
+      background: transparent;
+    }
+    ::-webkit-scrollbar-thumb {
+      background: #DCE3E8;
+      border-radius: 3px;
+    }
+    ::-webkit-scrollbar-thumb:hover {
+      background: #B0B8C0;
+    }
+  </style>
+</head>
+<body>
+  <canvas id="game-canvas"></canvas>
+  <div id="ui-overlay"></div>
+  <script type="module" src="/src/main.ts"></script>
+</body>
+</html>

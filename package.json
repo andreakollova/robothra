@@ -1,0 +1,20 @@
+{
+  "name": "little-robot-learning-factory",
+  "version": "1.0.0",
+  "description": "Little Robot: The Learning Factory - A 2D educational exploration game",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "tsc --noEmit && vite build",
+    "preview": "vite preview"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/andreakollova/robothra.git"
+  },
+  "license": "ISC",
+  "devDependencies": {
+    "typescript": "^7.0.2",
+    "vite": "^8.3.5"
+  }
+}
