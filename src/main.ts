@@ -72,13 +72,9 @@ function gameLoop(now: number) {
       state.togglePause();
     } else if (state.overlay === 'hint') {
       state.dismissHint();
-    } else if (state.overlay === 'inspect' || state.overlay === 'question' || state.overlay === 'feedback') {
-      if (state.overlay === 'question') {
-        input.setTyping(false);
-        state.skipQuestion();
-      } else {
-        state.closeOverlay();
-      }
+    } else if (state.overlay === 'inspect' || state.overlay === 'question' || state.overlay === 'open_ended') {
+      input.setTyping(false);
+      state.skipChallenge();
     } else if (state.overlay === 'editor') {
       state.overlay = 'pause';
       state.playTimeActive = false;
@@ -103,35 +99,17 @@ function gameLoop(now: number) {
   // Enter to continue in overlays
   if (inputState.enterJustPressed) {
     if (state.overlay === 'inspect') {
-      state.continueFromInspection();
+      state.startChallenge();
     } else if (state.overlay === 'feedback') {
       if (state.practiceMode) {
         state.nextPracticeQuestion();
       } else {
-        state.continueFromInspection();
+        state.advanceFromFeedback();
       }
+    } else if (state.overlay === 'challenge_result') {
+      state.finishChallenge();
     } else if (state.overlay === 'hint') {
       state.dismissHint();
-    }
-  }
-
-  // Quiz navigation with arrow keys and space
-  if (state.overlay === 'question' && state.inspection) {
-    const q = state.inspection;
-    if (inputState.spaceJustPressed) {
-      // Space selects current option (no-op for open ended, submit for quiz)
-    }
-    // Arrow keys for quiz options
-    if (q.phase === 'question') {
-      const obj = OBJECTS_LOOKUP[q.objectId];
-      if (obj?.questionId) {
-        const question = QUESTIONS_LOOKUP[obj.questionId];
-        if (question?.type === 'quiz' && question.options) {
-          if (inputState.up || inputState.left) {
-            // We need raw key events for this, handled below
-          }
-        }
-      }
     }
   }
 
@@ -151,7 +129,7 @@ function gameLoop(now: number) {
           (inputState.mouseWorldY - placement.y) ** 2
         );
         if (clickDist < 30) {
-          state.discoverObject(placement.objectId);
+          state.startInspection(placement.objectId);
           break;
         }
       }
@@ -185,40 +163,22 @@ function gameLoop(now: number) {
 
 // Quick lookup maps
 import { OBJECTS } from './data/objects';
-import { QUESTIONS } from './data/questions';
 import { OBJECT_PLACEMENTS } from './data/world';
-
-const OBJECTS_LOOKUP: Record<string, typeof OBJECTS[0]> = {};
-for (const obj of OBJECTS) OBJECTS_LOOKUP[obj.id] = obj;
-
-const QUESTIONS_LOOKUP: Record<string, typeof QUESTIONS[0]> = {};
-for (const q of QUESTIONS) QUESTIONS_LOOKUP[q.id] = q;
 
 const PLACEMENTS = OBJECT_PLACEMENTS;
 
-// Arrow key navigation for quiz options
+// Space to toggle quiz option selection
 window.addEventListener('keydown', (e) => {
-  if (state.overlay === 'question' && state.inspection?.phase === 'question') {
-    const obj = OBJECTS_LOOKUP[state.inspection.objectId];
-    if (!obj?.questionId) return;
-    const question = QUESTIONS_LOOKUP[obj.questionId];
-    if (!question || question.type !== 'quiz' || !question.options) return;
+  if (state.overlay === 'question' && state.challenge) {
+    const q = state.challenge.questions[state.challenge.currentIndex];
+    if (!q || q.type !== 'quiz' || !q.options) return;
 
-    const optCount = question.options.length;
-    if (e.key === 'ArrowUp' || e.key === 'ArrowLeft') {
+    if (e.key === ' ') {
       e.preventDefault();
-      state.inspection.selectedAnswer = (state.inspection.selectedAnswer - 1 + optCount) % optCount;
-      ui.update();
-    } else if (e.key === 'ArrowDown' || e.key === 'ArrowRight') {
-      e.preventDefault();
-      state.inspection.selectedAnswer = (state.inspection.selectedAnswer + 1) % optCount;
-      ui.update();
-    } else if (e.key === ' ') {
-      e.preventDefault();
-      // Space confirms selection (visual only, Enter submits)
+      // Toggle the first unselected or cycle - handled by clicking in UI
     } else if (e.key === 'Enter') {
       e.preventDefault();
-      state.submitAnswer();
+      state.submitQuizAnswer();
       ui.update();
     }
   }

@@ -8,7 +8,6 @@ export interface GameObject {
   description: string;
   subsection?: string; // For Applications module
   large: boolean; // Large exhibits are scanned, not collected
-  questionId?: string;
   worldX?: number;
   worldY?: number;
   illustration: string; // Key for drawing function
@@ -37,7 +36,7 @@ export const OBJECTS: GameObject[] = [
   { id: 'wr01', name: 'Industrial Robot Scale Model', module: 'What is Robotics?', moduleIndex: 0, description: 'An industrial robot is a programmable manipulator used to perform tasks such as handling, assembly, or welding.', large: true, illustration: 'industrial_robot_model' },
   { id: 'wr02', name: 'Mobile Robot Scale Model', module: 'What is Robotics?', moduleIndex: 0, description: 'A mobile robot can move through its environment rather than working only from a fixed location.', large: true, illustration: 'mobile_robot_model' },
   { id: 'wr03', name: 'Revolute Joint Demonstrator', module: 'What is Robotics?', moduleIndex: 0, description: 'A revolute joint allows one connected link to rotate relative to another.', large: true, illustration: 'revolute_joint' },
-  { id: 'wr04', name: 'Prismatic Joint Demonstrator', module: 'What is Robotics?', moduleIndex: 0, description: 'A prismatic joint allows one connected link to slide along an axis.', large: true, illustration: 'prismatic_joint', questionId: 'q1' },
+  { id: 'wr04', name: 'Prismatic Joint Demonstrator', module: 'What is Robotics?', moduleIndex: 0, description: 'A prismatic joint allows one connected link to slide along an axis.', large: true, illustration: 'prismatic_joint'},
   { id: 'wr05', name: 'Cartesian Coordinate Frame', module: 'What is Robotics?', moduleIndex: 0, description: 'Three perpendicular axes describe positions using x, y, and z coordinates.', large: true, illustration: 'cartesian_frame' },
   { id: 'wr06', name: 'Polar Coordinate Disc', module: 'What is Robotics?', moduleIndex: 0, description: 'A polar coordinate system describes a point in a plane using its distance and angle from an origin.', large: false, illustration: 'polar_disc' },
   { id: 'wr07', name: 'Cylindrical Coordinate Model', module: 'What is Robotics?', moduleIndex: 0, description: 'Cylindrical coordinates describe a position using radius, angle, and height.', large: true, illustration: 'cylindrical_coord' },
@@ -63,7 +62,7 @@ export const OBJECTS: GameObject[] = [
   { id: 'rb10', name: 'Strain Gauge', module: 'Robots', moduleIndex: 1, description: 'A strain gauge changes electrical resistance as the surface it is attached to deforms.', large: false, illustration: 'strain_gauge' },
   { id: 'rb11', name: 'Flexible Material Test Strip', module: 'Robots', moduleIndex: 1, description: 'This sample demonstrates how a material deforms under an applied load.', large: false, illustration: 'flex_strip' },
   { id: 'rb12', name: 'Mechanical Travel Stop', module: 'Robots', moduleIndex: 1, description: 'A mechanical stop physically limits the movement of a mechanism.', large: false, illustration: 'travel_stop' },
-  { id: 'rb13', name: 'Positioning Target Plate', module: 'Robots', moduleIndex: 1, description: 'This marked plate provides a reference for comparing desired and achieved tool positions.', large: false, illustration: 'target_plate', questionId: 'q2' },
+  { id: 'rb13', name: 'Positioning Target Plate', module: 'Robots', moduleIndex: 1, description: 'This marked plate provides a reference for comparing desired and achieved tool positions.', large: false, illustration: 'target_plate'},
   { id: 'rb14', name: 'Kinematics Diagram Sheet', module: 'Robots', moduleIndex: 1, description: 'This sheet illustrates the relationship between joint values and end-effector position.', large: false, illustration: 'kinematics_sheet' },
   { id: 'rb15', name: 'Historical Robotics Market Report', module: 'Robots', moduleIndex: 1, description: 'This dated report compares robot installations and adoption measures discussed in the course.', large: false, illustration: 'market_report' },
 
@@ -99,7 +98,7 @@ export const OBJECTS: GameObject[] = [
   { id: 'mr12', name: 'Camera Module', module: 'Mobile Robots', moduleIndex: 3, description: 'A camera captures images that a robot can process for perception and navigation.', large: false, illustration: 'camera_module' },
   { id: 'mr13', name: 'GPS Receiver', module: 'Mobile Robots', moduleIndex: 3, description: 'A GPS receiver uses satellite signals to estimate position where reception conditions permit.', large: false, illustration: 'gps_receiver' },
   { id: 'mr14', name: 'Electronic Compass', module: 'Mobile Robots', moduleIndex: 3, description: 'An electronic compass estimates heading from the local magnetic field.', large: false, illustration: 'compass' },
-  { id: 'mr15', name: 'Environment Map Display', module: 'Mobile Robots', moduleIndex: 3, description: 'This display represents spatial information a robot can use for localization and route planning.', large: true, illustration: 'env_map', questionId: 'q3' },
+  { id: 'mr15', name: 'Environment Map Display', module: 'Mobile Robots', moduleIndex: 3, description: 'This display represents spatial information a robot can use for localization and route planning.', large: true, illustration: 'env_map'},
 
   // Module 5: Applications
   { id: 'ap01', name: 'Robotic Spot-Welding Gun', module: 'Applications', moduleIndex: 4, subsection: 'Industrial Robots', description: 'A spot-welding gun joins suitable metal sheets at localized contact points.', large: true, illustration: 'spot_weld_gun' },

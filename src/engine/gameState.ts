@@ -1,21 +1,21 @@
 // Core game state management
 
 import { OBJECTS, MODULE_NAMES, ModuleName } from '../data/objects';
-import { QUESTIONS, getQuestionById, getQuestionForObject, Question } from '../data/questions';
+import { QUESTIONS, getQuestionById, getChallengeSet, Question } from '../data/questions';
 import { OBJECT_PLACEMENTS, getAllWalls, getPlayerStart, getRoomAt, ROOMS, Wall } from '../data/world';
 import { resolveCollision, distanceBetween } from './collision';
 import { SaveData, loadGame, saveGame, QuizAttempt } from './save';
 import { playStep, playDiscovery } from './sound';
 
-const PLAYER_SPEED = 180; // px/sec
-const PLAYER_BOOST = 360; // px/sec when holding Shift
+const PLAYER_SPEED = 180;
+const PLAYER_BOOST = 360;
 const PLAYER_SIZE = 24;
 const INTERACTION_DIST = 60;
 const STEP_INTERVAL = 0.25;
 
 export type Direction = 'up' | 'down' | 'left' | 'right';
 
-export type UIOverlay = 'none' | 'inspect' | 'question' | 'feedback' | 'map' | 'journal' | 'pause' | 'completion' | 'editor' | 'hint';
+export type UIOverlay = 'none' | 'inspect' | 'question' | 'feedback' | 'open_ended' | 'open_feedback' | 'challenge_result' | 'map' | 'journal' | 'pause' | 'completion' | 'editor' | 'hint';
 
 export interface PlayerState {
   x: number;
@@ -24,12 +24,15 @@ export interface PlayerState {
   moving: boolean;
 }
 
-export interface InspectionState {
+// The challenge set for an object: 2 quiz + 1 open-ended
+export interface ChallengeState {
   objectId: string;
-  phase: 'info' | 'question' | 'feedback';
-  selectedAnswer: number;
+  questions: Question[];       // 3 questions: quiz, quiz, open-ended
+  currentIndex: number;        // 0, 1, 2
+  selectedAnswers: Set<number>[]; // multi-select for each quiz
   writtenAnswer: string;
-  feedbackCorrect: boolean | null;
+  results: (boolean | null)[];  // true/false for quiz, null for open-ended until self-approved
+  selfApproved: boolean | null; // for open-ended
 }
 
 export class GameState {
@@ -37,12 +40,12 @@ export class GameState {
   walls: Wall[];
   nearestObjectId: string | null = null;
   overlay: UIOverlay = 'hint';
-  inspection: InspectionState | null = null;
+  challenge: ChallengeState | null = null;
+  inspectingObjectId: string | null = null; // for the info phase
   save: SaveData;
   playTimeActive = true;
   private stepTimer = 0;
   private saveTimer = 0;
-  private hintDismissed = false;
   journalTab: 'collection' | 'progress' = 'collection';
   journalModule: ModuleName | null = null;
   practiceMode = false;
@@ -59,16 +62,9 @@ export class GameState {
       moving: false,
     };
     this.walls = getAllWalls();
-
-    // Validate position
     if (!this.isWalkable(this.player.x, this.player.y)) {
       this.player.x = start.x;
       this.player.y = start.y;
-    }
-
-    // Check completion
-    if (this.save.discoveredObjects.length >= 75 && this.overlay === 'hint') {
-      // Already completed, just show hint
     }
   }
 
@@ -85,7 +81,6 @@ export class GameState {
   update(dt: number, input: { up: boolean; down: boolean; left: boolean; right: boolean; shift?: boolean }) {
     if (this.overlay !== 'none' && this.overlay !== 'hint') return;
 
-    // Movement
     let dx = 0, dy = 0;
     if (input.up) dy -= 1;
     if (input.down) dy += 1;
@@ -95,7 +90,6 @@ export class GameState {
     this.player.moving = dx !== 0 || dy !== 0;
 
     if (this.player.moving) {
-      // Normalize diagonal
       const len = Math.sqrt(dx * dx + dy * dy);
       dx /= len;
       dy /= len;
@@ -111,14 +105,12 @@ export class GameState {
       this.player.x = resolved.x;
       this.player.y = resolved.y;
 
-      // Direction
       if (Math.abs(dx) > Math.abs(dy)) {
         this.player.direction = dx > 0 ? 'right' : 'left';
       } else if (dy !== 0) {
         this.player.direction = dy > 0 ? 'down' : 'up';
       }
 
-      // Step sound
       this.stepTimer += dt;
       if (this.stepTimer >= STEP_INTERVAL) {
         this.stepTimer = 0;
@@ -126,7 +118,7 @@ export class GameState {
       }
     }
 
-    // Find nearest interactable object
+    // Find nearest undiscovered object
     this.nearestObjectId = null;
     let nearestDist = INTERACTION_DIST;
     const pcx = this.player.x + PLAYER_SIZE / 2;
@@ -140,12 +132,10 @@ export class GameState {
       }
     }
 
-    // Update playtime
     if (this.playTimeActive) {
       this.save.playTimeMs += dt * 1000;
     }
 
-    // Auto-save every 10 seconds
     this.saveTimer += dt;
     if (this.saveTimer >= 10) {
       this.saveTimer = 0;
@@ -157,129 +147,195 @@ export class GameState {
 
   interact() {
     if (this.nearestObjectId && this.overlay === 'none') {
-      this.discoverObject(this.nearestObjectId);
+      this.startInspection(this.nearestObjectId);
     }
   }
 
-  discoverObject(objectId: string) {
+  // Step 1: Show object info
+  startInspection(objectId: string) {
     const obj = OBJECTS.find(o => o.id === objectId);
     if (!obj) return;
-
-    if (!this.save.discoveredObjects.includes(objectId)) {
-      this.save.discoveredObjects.push(objectId);
-      playDiscovery();
-    }
-
-    this.inspection = {
-      objectId,
-      phase: 'info',
-      selectedAnswer: 0,
-      writtenAnswer: '',
-      feedbackCorrect: null,
-    };
+    this.inspectingObjectId = objectId;
     this.overlay = 'inspect';
   }
 
-  continueFromInspection() {
-    if (!this.inspection) return;
-
-    const obj = OBJECTS.find(o => o.id === this.inspection!.objectId);
+  // Step 2: After seeing info, start the challenge (2 quiz + 1 open-ended)
+  startChallenge() {
+    if (!this.inspectingObjectId) return;
+    const obj = OBJECTS.find(o => o.id === this.inspectingObjectId);
     if (!obj) { this.closeOverlay(); return; }
 
-    const question = obj.questionId ? getQuestionById(obj.questionId) : null;
-
-    if (this.inspection.phase === 'info') {
-      if (question) {
-        this.inspection.phase = 'question';
-        this.overlay = 'question';
-      } else {
-        this.closeOverlay();
-        this.checkCompletion();
-      }
-    } else if (this.inspection.phase === 'feedback') {
+    const questions = getChallengeSet(obj.module);
+    if (questions.length === 0) {
+      // No questions for this module - auto-collect
+      this.collectObject(this.inspectingObjectId);
       this.closeOverlay();
       this.checkCompletion();
+      return;
+    }
+
+    this.challenge = {
+      objectId: this.inspectingObjectId,
+      questions,
+      currentIndex: 0,
+      selectedAnswers: questions.map(() => new Set<number>()),
+      writtenAnswer: '',
+      results: questions.map(() => null),
+      selfApproved: null,
+    };
+
+    const q = questions[0];
+    this.overlay = q.type === 'quiz' ? 'question' : 'open_ended';
+  }
+
+  // Toggle selection for multi-select quiz
+  toggleQuizOption(optionIndex: number) {
+    if (!this.challenge) return;
+    const selected = this.challenge.selectedAnswers[this.challenge.currentIndex];
+    if (selected.has(optionIndex)) {
+      selected.delete(optionIndex);
+    } else {
+      selected.add(optionIndex);
     }
   }
 
-  submitAnswer() {
-    if (!this.inspection || this.inspection.phase !== 'question') return;
-    const obj = OBJECTS.find(o => o.id === this.inspection!.objectId);
-    if (!obj || !obj.questionId) return;
+  // Submit quiz answer
+  submitQuizAnswer() {
+    if (!this.challenge) return;
+    const idx = this.challenge.currentIndex;
+    const q = this.challenge.questions[idx];
+    if (!q || q.type !== 'quiz') return;
 
-    const question = getQuestionById(obj.questionId);
-    if (!question) return;
+    const selected = this.challenge.selectedAnswers[idx];
+    const selectedLabels = new Set(
+      [...selected].map(i => q.options![i].label)
+    );
+    const correctLabels = new Set(q.correctAnswers || []);
 
-    let correct: boolean | null = null;
-    let answer = '';
+    // Check: same set
+    const correct = selectedLabels.size === correctLabels.size &&
+      [...selectedLabels].every(l => correctLabels.has(l));
 
-    if (question.type === 'quiz') {
-      const selected = question.options![this.inspection.selectedAnswer];
-      answer = selected.label;
-      correct = answer === question.correctAnswer;
+    this.challenge.results[idx] = correct;
 
-      // Add to review if incorrect
-      if (!correct && !this.save.reviewQueue.includes(question.id)) {
-        this.save.reviewQueue.push(question.id);
-      }
-      // Remove from review if correct
-      if (correct) {
-        this.save.reviewQueue = this.save.reviewQueue.filter(id => id !== question.id);
-      }
-    } else {
-      // Open-ended
-      answer = this.inspection.writtenAnswer;
-      correct = null; // Mark as reflection
-      this.save.openEndedAnswers[question.id] = answer;
-    }
-
+    // Save attempt
     const attempt: QuizAttempt = {
-      questionId: question.id,
-      answer,
+      questionId: q.id,
+      answer: [...selectedLabels].join(','),
       correct,
       timestamp: Date.now(),
     };
     this.save.quizAttempts.push(attempt);
 
-    this.inspection.phase = 'feedback';
-    this.inspection.feedbackCorrect = correct;
-    this.overlay = 'feedback';
+    if (!correct && !this.save.reviewQueue.includes(q.id)) {
+      this.save.reviewQueue.push(q.id);
+    }
+    if (correct) {
+      this.save.reviewQueue = this.save.reviewQueue.filter(id => id !== q.id);
+    }
 
-    this.save.playerX = this.player.x;
-    this.save.playerY = this.player.y;
-    saveGame(this.save);
+    this.overlay = 'feedback';
+    this.forceSave();
   }
 
-  skipQuestion() {
-    this.closeOverlay();
+  // Submit open-ended answer
+  submitOpenAnswer() {
+    if (!this.challenge) return;
+    const idx = this.challenge.currentIndex;
+    const q = this.challenge.questions[idx];
+    if (!q || q.type !== 'open_ended') return;
+
+    this.save.openEndedAnswers[q.id] = this.challenge.writtenAnswer;
+
+    const attempt: QuizAttempt = {
+      questionId: q.id,
+      answer: this.challenge.writtenAnswer,
+      correct: null, // pending self-approval
+      timestamp: Date.now(),
+    };
+    this.save.quizAttempts.push(attempt);
+
+    this.overlay = 'open_feedback'; // show model answer + self-approve
+    this.forceSave();
+  }
+
+  // Self-approve open-ended answer
+  selfApproveOpenEnded(approved: boolean) {
+    if (!this.challenge) return;
+    const idx = this.challenge.currentIndex;
+    this.challenge.results[idx] = approved;
+    this.challenge.selfApproved = approved;
+    this.advanceChallenge();
+  }
+
+  // After quiz feedback, advance to next question
+  advanceFromFeedback() {
+    if (!this.challenge) return;
+    this.advanceChallenge();
+  }
+
+  private advanceChallenge() {
+    if (!this.challenge) return;
+    this.challenge.currentIndex++;
+
+    if (this.challenge.currentIndex >= this.challenge.questions.length) {
+      // Challenge complete - check if all passed
+      const allCorrect = this.challenge.results.every(r => r === true);
+      if (allCorrect) {
+        this.collectObject(this.challenge.objectId);
+      }
+      this.overlay = 'challenge_result';
+      return;
+    }
+
+    // Show next question
+    const q = this.challenge.questions[this.challenge.currentIndex];
+    this.challenge.writtenAnswer = '';
+    this.challenge.selfApproved = null;
+    this.overlay = q.type === 'quiz' ? 'question' : 'open_ended';
+  }
+
+  private collectObject(objectId: string) {
+    if (!this.save.discoveredObjects.includes(objectId)) {
+      this.save.discoveredObjects.push(objectId);
+      playDiscovery();
+      this.forceSave();
+    }
+  }
+
+  // Called when dismissing challenge result
+  finishChallenge() {
+    this.challenge = null;
+    this.inspectingObjectId = null;
+    this.overlay = 'none';
     this.checkCompletion();
+  }
+
+  skipChallenge() {
+    this.challenge = null;
+    this.inspectingObjectId = null;
+    this.overlay = 'none';
   }
 
   closeOverlay() {
     this.overlay = 'none';
-    this.inspection = null;
+    this.challenge = null;
+    this.inspectingObjectId = null;
     this.practiceMode = false;
   }
 
   dismissHint() {
-    this.hintDismissed = true;
     this.overlay = 'none';
   }
 
   toggleMap() {
-    if (this.overlay === 'map') {
-      this.overlay = 'none';
-    } else if (this.overlay === 'none') {
-      this.overlay = 'map';
-    }
+    if (this.overlay === 'map') this.overlay = 'none';
+    else if (this.overlay === 'none') this.overlay = 'map';
   }
 
   toggleJournal() {
-    if (this.overlay === 'journal') {
-      this.overlay = 'none';
-    } else if (this.overlay === 'none') {
-      this.overlay = 'journal';
-    }
+    if (this.overlay === 'journal') this.overlay = 'none';
+    else if (this.overlay === 'none') this.overlay = 'journal';
   }
 
   togglePause() {
@@ -300,12 +356,9 @@ export class GameState {
   teleportToRoom(roomId: string) {
     const room = ROOMS.find(r => r.id === roomId);
     if (!room) return;
-    // Place player in center of room, avoiding furniture
     this.player.x = room.x + room.w / 2 - PLAYER_SIZE / 2;
     this.player.y = room.y + room.h / 2 - PLAYER_SIZE / 2;
-    // If stuck in collision, nudge
     if (!this.isWalkable(this.player.x, this.player.y)) {
-      // Try offsets
       for (const [ox, oy] of [[0, -48], [0, 48], [-48, 0], [48, 0], [-48, -48], [48, 48]]) {
         const tx = room.x + room.w / 2 + ox - PLAYER_SIZE / 2;
         const ty = room.y + room.h / 2 + oy - PLAYER_SIZE / 2;
@@ -333,45 +386,25 @@ export class GameState {
     const discovered = moduleObjects.filter(o => this.isDiscovered(o.id)).length;
     const total = moduleObjects.length;
 
-    // Question stats
     const moduleQuestions = QUESTIONS.filter(q => q.module === moduleName);
     const attempts = this.save.quizAttempts.filter(a =>
       moduleQuestions.some(q => q.id === a.questionId)
     );
 
-    const uniqueAttempted = new Set(attempts.map(a => a.questionId)).size;
-    const correctIds = new Set(
-      attempts.filter(a => a.correct === true).map(a => a.questionId)
-    );
-    const incorrectIds = new Set(
-      attempts.filter(a => a.correct === false).map(a => a.questionId)
-    );
-    // Remove correct from incorrect set (they retried successfully)
+    const correctIds = new Set(attempts.filter(a => a.correct === true).map(a => a.questionId));
+    const incorrectIds = new Set(attempts.filter(a => a.correct === false).map(a => a.questionId));
     for (const id of correctIds) incorrectIds.delete(id);
 
-    const reflections = new Set(
-      attempts.filter(a => a.correct === null).map(a => a.questionId)
-    ).size;
-
-    const reviewCount = this.save.reviewQueue.filter(id =>
-      moduleQuestions.some(q => q.id === id)
-    ).length;
-
-    const unanswered = moduleQuestions.filter(q => {
-      const discovered = this.isDiscovered(q.objectId);
-      const attempted = attempts.some(a => a.questionId === q.id);
-      return discovered && !attempted;
-    }).length;
+    const reflections = new Set(attempts.filter(a => a.correct === null).map(a => a.questionId)).size;
+    const reviewCount = this.save.reviewQueue.filter(id => moduleQuestions.some(q => q.id === id)).length;
 
     return {
       discovered,
       total,
-      uniqueAttempted,
       correctCount: correctIds.size,
       incorrectCount: incorrectIds.size,
       reflections,
       reviewCount,
-      unanswered,
       hasQuestions: moduleQuestions.length > 0,
     };
   }
@@ -379,31 +412,33 @@ export class GameState {
   startPractice(moduleName: ModuleName | null) {
     let reviewIds: string[];
     if (moduleName) {
-      const moduleQuestions = QUESTIONS.filter(q => q.module === moduleName);
-      reviewIds = this.save.reviewQueue.filter(id =>
-        moduleQuestions.some(q => q.id === id)
-      );
+      const mq = QUESTIONS.filter(q => q.module === moduleName);
+      reviewIds = this.save.reviewQueue.filter(id => mq.some(q => q.id === id));
     } else {
       reviewIds = [...this.save.reviewQueue];
     }
-
     if (reviewIds.length === 0) return;
 
     this.practiceMode = true;
     this.practiceQueue = reviewIds;
     this.practiceIndex = 0;
+    this.loadPracticeQuestion(0);
+  }
 
-    const question = getQuestionById(reviewIds[0]);
-    if (!question) return;
+  private loadPracticeQuestion(index: number) {
+    const q = getQuestionById(this.practiceQueue[index]);
+    if (!q) { this.closeOverlay(); return; }
 
-    this.inspection = {
-      objectId: question.objectId,
-      phase: 'question',
-      selectedAnswer: 0,
+    this.challenge = {
+      objectId: '',
+      questions: [q],
+      currentIndex: 0,
+      selectedAnswers: [new Set()],
       writtenAnswer: '',
-      feedbackCorrect: null,
+      results: [null],
+      selfApproved: null,
     };
-    this.overlay = 'question';
+    this.overlay = q.type === 'quiz' ? 'question' : 'open_ended';
   }
 
   nextPracticeQuestion() {
@@ -412,18 +447,7 @@ export class GameState {
       this.closeOverlay();
       return;
     }
-
-    const question = getQuestionById(this.practiceQueue[this.practiceIndex]);
-    if (!question) { this.closeOverlay(); return; }
-
-    this.inspection = {
-      objectId: question.objectId,
-      phase: 'question',
-      selectedAnswer: 0,
-      writtenAnswer: '',
-      feedbackCorrect: null,
-    };
-    this.overlay = 'question';
+    this.loadPracticeQuestion(this.practiceIndex);
   }
 
   private checkCompletion() {
