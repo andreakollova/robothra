@@ -79,6 +79,9 @@ export class Renderer {
     // Draw objects (colored circles)
     this.drawObjects(ctx, camera, state);
 
+    // Draw NPC buddy
+    this.drawNPC(ctx, state);
+
     // Draw player
     this.drawPlayer(ctx, state);
 
@@ -855,6 +858,113 @@ export class Renderer {
     ctx.beginPath();
     ctx.arc(3, -16 + breathe, 2, 0, Math.PI * 2);
     ctx.fill();
+
+    ctx.restore();
+  }
+
+  private drawNPC(ctx: CanvasRenderingContext2D, state: GameState) {
+    // Buddy bot that wanders near the player, giving a sense of companionship
+    const t = this.time;
+
+    // NPC follows a slow patrol pattern near the player
+    const px = state.player.x;
+    const py = state.player.y;
+    // Offset from player - orbits at distance, with some lag
+    const orbitDist = 120;
+    const orbitSpeed = 0.15;
+    const npcX = px + Math.cos(t * orbitSpeed) * orbitDist + Math.sin(t * 0.07) * 30;
+    const npcY = py + Math.sin(t * orbitSpeed) * orbitDist * 0.6 + Math.cos(t * 0.09) * 20;
+
+    // Determine facing direction based on movement
+    const velX = -Math.sin(t * orbitSpeed) * orbitSpeed;
+    const npcDir = velX > 0 ? 'right' : 'left';
+
+    const breathe = Math.sin(t * 2.5) * 0.5;
+    const bobble = Math.sin(t * 4) * 1;
+
+    ctx.save();
+    ctx.translate(npcX + 12, npcY + 12 + bobble);
+
+    // Ground shadow
+    ctx.fillStyle = 'rgba(0,0,0,0.08)';
+    ctx.beginPath();
+    ctx.ellipse(1, 13, 10, 4, 0, 0, Math.PI * 2);
+    ctx.fill();
+
+    // Wheels
+    ctx.fillStyle = '#4A2C2A';
+    if (npcDir === 'left' || npcDir === 'right') {
+      this.drawRoundedRect(ctx, -9, -14, 5, 5, 2);
+      this.drawRoundedRect(ctx, -9, 9, 5, 5, 2);
+      this.drawRoundedRect(ctx, 4, -14, 5, 5, 2);
+      this.drawRoundedRect(ctx, 4, 9, 5, 5, 2);
+    } else {
+      this.drawRoundedRect(ctx, -14, -9, 5, 5, 2);
+      this.drawRoundedRect(ctx, 9, -9, 5, 5, 2);
+      this.drawRoundedRect(ctx, -14, 4, 5, 5, 2);
+      this.drawRoundedRect(ctx, 9, 4, 5, 5, 2);
+    }
+
+    // Body - warm orange/coral tone
+    const bodyGrad = ctx.createLinearGradient(-11, -11, 11, 11);
+    bodyGrad.addColorStop(0, '#EF6C00');
+    bodyGrad.addColorStop(1, '#E65100');
+    ctx.fillStyle = bodyGrad;
+    this.drawRoundedRect(ctx, -11, -11, 22, 22, 7);
+
+    // Body outline
+    ctx.strokeStyle = 'rgba(0,0,0,0.12)';
+    ctx.lineWidth = 1;
+    this.strokeRoundedRect(ctx, -11, -11, 22, 22, 7);
+
+    // Top highlight
+    ctx.fillStyle = 'rgba(255,255,255,0.22)';
+    this.drawRoundedRect(ctx, -9, -10, 18, 9, 5);
+
+    // Sensor - green
+    const s = npcDir === 'right' ? { x: 8, y: 0 } : { x: -8, y: 0 };
+
+    ctx.fillStyle = 'rgba(76, 175, 80, 0.2)';
+    ctx.beginPath();
+    ctx.arc(s.x, s.y, 7 + breathe, 0, Math.PI * 2);
+    ctx.fill();
+
+    ctx.strokeStyle = '#4CAF50';
+    ctx.lineWidth = 1.5;
+    ctx.beginPath();
+    ctx.arc(s.x, s.y, 4.5, 0, Math.PI * 2);
+    ctx.stroke();
+
+    ctx.fillStyle = '#4CAF50';
+    ctx.beginPath();
+    ctx.arc(s.x, s.y, 3, 0, Math.PI * 2);
+    ctx.fill();
+
+    ctx.fillStyle = 'rgba(255,255,255,0.6)';
+    ctx.beginPath();
+    ctx.arc(s.x - 1, s.y - 1, 1.2, 0, Math.PI * 2);
+    ctx.fill();
+
+    // Antenna
+    ctx.strokeStyle = '#BF360C';
+    ctx.lineWidth = 1.5;
+    ctx.beginPath();
+    ctx.moveTo(-3, -11);
+    ctx.lineTo(-3, -16 + breathe);
+    ctx.stroke();
+    ctx.fillStyle = '#4CAF50';
+    ctx.beginPath();
+    ctx.arc(-3, -16 + breathe, 2, 0, Math.PI * 2);
+    ctx.fill();
+
+    // Name tag above
+    ctx.fillStyle = 'rgba(255,255,255,0.85)';
+    this.drawRoundedRect(ctx, -18, -28, 36, 12, 4);
+    ctx.fillStyle = '#BF360C';
+    ctx.font = '600 8px system-ui';
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.fillText('Robi', 0, -22);
 
     ctx.restore();
   }
