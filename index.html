@@ -16,7 +16,7 @@
       height: 100%;
       overflow: hidden;
       font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
-      background: #E8E4DC;
+      background: #ECEAE4;
       -webkit-font-smoothing: antialiased;
     }
 
@@ -36,24 +36,24 @@
       display: none;
       align-items: center;
       justify-content: center;
-      background: rgba(38, 52, 69, 0.3);
-      backdrop-filter: blur(4px);
-      -webkit-backdrop-filter: blur(4px);
+      background: rgba(20, 30, 45, 0.35);
+      backdrop-filter: blur(8px);
+      -webkit-backdrop-filter: blur(8px);
       z-index: 100;
     }
 
     .ui-panel {
-      background: #FFFFFF;
-      border-radius: 16px;
-      box-shadow: 0 8px 32px rgba(0, 0, 0, 0.12), 0 2px 8px rgba(0, 0, 0, 0.06);
+      background: rgba(255, 255, 255, 0.97);
+      border-radius: 20px;
+      box-shadow: 0 20px 60px rgba(0, 0, 0, 0.15), 0 4px 16px rgba(0, 0, 0, 0.08), 0 0 0 1px rgba(0, 0, 0, 0.04);
       overflow-y: auto;
-      animation: panelIn 0.2s ease-out;
+      animation: panelIn 0.25s cubic-bezier(0.34, 1.56, 0.64, 1);
     }
 
     @keyframes panelIn {
       from {
         opacity: 0;
-        transform: translateY(12px) scale(0.97);
+        transform: translateY(20px) scale(0.95);
       }
       to {
         opacity: 1;
@@ -63,43 +63,50 @@
 
     .ui-btn {
       display: inline-block;
-      padding: 10px 20px;
+      padding: 11px 22px;
       border: none;
-      border-radius: 8px;
+      border-radius: 12px;
       font-size: 14px;
       font-weight: 600;
       cursor: pointer;
-      transition: all 0.15s;
+      transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
       font-family: inherit;
       text-align: center;
       width: 100%;
+      letter-spacing: 0.01em;
     }
 
     .ui-btn.primary {
-      background: #3564D8;
+      background: linear-gradient(135deg, #4A7AE8, #3564D8);
       color: #FFFFFF;
+      box-shadow: 0 2px 8px rgba(53, 100, 216, 0.25);
     }
 
     .ui-btn.primary:hover {
-      background: #2850B8;
+      background: linear-gradient(135deg, #3564D8, #2850B8);
+      box-shadow: 0 4px 14px rgba(53, 100, 216, 0.35);
+      transform: translateY(-1px);
     }
 
     .ui-btn.secondary {
-      background: #F0F2F5;
-      color: #627185;
+      background: #F4F5F7;
+      color: #4A5568;
+      border: 1px solid #E2E5EA;
     }
 
     .ui-btn.secondary:hover {
-      background: #E4E7EC;
+      background: #EBEDF0;
+      border-color: #CBD0D8;
     }
 
     .ui-btn.danger {
       background: #FFF0F0;
       color: #D32F2F;
+      border: 1px solid #FECACA;
     }
 
     .ui-btn.danger:hover {
-      background: #FFE0E0;
+      background: #FEE2E2;
     }
 
     .ui-btn:focus {
@@ -107,32 +114,39 @@
       outline-offset: 2px;
     }
 
+    .ui-btn:active {
+      transform: scale(0.98);
+    }
+
     .quiz-option {
       display: flex;
       align-items: flex-start;
-      gap: 10px;
-      padding: 12px 14px;
-      border: 1.5px solid #DCE3E8;
-      border-radius: 10px;
-      background: #FFFFFF;
+      gap: 12px;
+      padding: 14px 16px;
+      border: 1.5px solid #E2E5EA;
+      border-radius: 12px;
+      background: #FAFBFC;
       cursor: pointer;
       font-size: 14px;
-      color: #263445;
+      color: #1A2B3C;
       text-align: left;
-      transition: all 0.15s;
+      transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
       font-family: inherit;
       width: 100%;
-      line-height: 1.4;
+      line-height: 1.5;
     }
 
     .quiz-option:hover {
-      border-color: #3564D8;
-      background: #F5F8FF;
+      border-color: #93B4F5;
+      background: #F0F4FF;
+      transform: translateY(-1px);
+      box-shadow: 0 2px 8px rgba(53, 100, 216, 0.08);
     }
 
     .quiz-option.selected {
       border-color: #3564D8;
-      background: #EEF2FF;
+      background: #EDF1FF;
+      box-shadow: 0 0 0 3px rgba(53, 100, 216, 0.1);
     }
 
     .quiz-option:focus {
@@ -144,31 +158,33 @@
       font-weight: 700;
       color: #3564D8;
       flex-shrink: 0;
-      min-width: 20px;
+      min-width: 22px;
+      font-size: 15px;
     }
 
     .tab-btn {
-      padding: 6px 14px;
-      border: 1.5px solid #DCE3E8;
-      border-radius: 6px;
-      background: #FFFFFF;
+      padding: 7px 16px;
+      border: 1.5px solid #E2E5EA;
+      border-radius: 10px;
+      background: #FAFBFC;
       font-size: 12px;
       font-weight: 600;
       color: #627185;
       cursor: pointer;
-      transition: all 0.15s;
+      transition: all 0.2s;
       font-family: inherit;
     }
 
     .tab-btn.active {
-      background: #3564D8;
+      background: linear-gradient(135deg, #4A7AE8, #3564D8);
       color: #FFFFFF;
-      border-color: #3564D8;
+      border-color: transparent;
+      box-shadow: 0 2px 6px rgba(53, 100, 216, 0.2);
     }
 
     .tab-btn:hover:not(.active) {
-      background: #F5F8FF;
-      border-color: #3564D8;
+      background: #F0F4FF;
+      border-color: #93B4F5;
     }
 
     textarea:focus {

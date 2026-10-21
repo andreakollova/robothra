@@ -60,8 +60,8 @@ export class Renderer {
     const w = this.canvas.width;
     const h = this.canvas.height;
 
-    // Clear
-    ctx.fillStyle = '#E8E4DC';
+    // Clear with subtle gradient background
+    ctx.fillStyle = '#ECEAE4';
     ctx.fillRect(0, 0, w, h);
 
     ctx.save();
@@ -99,40 +99,53 @@ export class Renderer {
 
       const colors = MODULE_COLORS[room.module as ModuleName] || MODULE_COLORS['What is Robotics?'];
 
-      // Floor
-      ctx.fillStyle = room.outdoor ? '#E5EDDF' : colors.floor;
+      // Room drop shadow
+      ctx.fillStyle = 'rgba(0,0,0,0.04)';
+      this.drawRoundedRect(ctx, room.x + 4, room.y + 4, room.w, room.h, 2);
+
+      // Floor base
+      ctx.fillStyle = room.outdoor ? '#EDF5E6' : colors.floor;
       ctx.fillRect(room.x, room.y, room.w, room.h);
 
-      // Floor pattern - subtle grid
-      ctx.strokeStyle = room.outdoor ? '#D5DDD0' : this.adjustAlpha(colors.wall, 0.3);
-      ctx.lineWidth = 0.5;
-      for (let gx = room.x; gx < room.x + room.w; gx += TILE) {
-        ctx.beginPath();
-        ctx.moveTo(gx, room.y);
-        ctx.lineTo(gx, room.y + room.h);
-        ctx.stroke();
+      // Floor tiles - alternating subtle pattern
+      const tileA = room.outdoor ? '#E5EDDE' : colors.floor;
+      const tileB = room.outdoor ? '#E0E8D8' : this.adjustAlpha(colors.wall, 0.12);
+      for (let tx = 0; tx < room.w / TILE; tx++) {
+        for (let ty = 0; ty < room.h / TILE; ty++) {
+          if ((tx + ty) % 2 === 0) {
+            ctx.fillStyle = tileB;
+            ctx.fillRect(room.x + tx * TILE, room.y + ty * TILE, TILE, TILE);
+          }
+        }
       }
-      for (let gy = room.y; gy < room.y + room.h; gy += TILE) {
-        ctx.beginPath();
-        ctx.moveTo(room.x, gy);
-        ctx.lineTo(room.x + room.w, gy);
-        ctx.stroke();
-      }
+
+      // Subtle inner border glow (module accent)
+      ctx.strokeStyle = this.adjustAlpha(colors.primary, 0.08);
+      ctx.lineWidth = 3;
+      ctx.strokeRect(room.x + 6, room.y + 6, room.w - 12, room.h - 12);
 
       // Outdoor decorations
       if (room.outdoor) {
         this.drawOutdoorDetails(ctx, room);
       }
 
-      // Walls
-      ctx.fillStyle = colors.wall;
+      // Walls with 3D effect
       for (const wall of room.walls) {
-        ctx.fillRect(wall.x, wall.y, wall.w, wall.h);
-        // Wall shadow
-        ctx.fillStyle = 'rgba(0,0,0,0.06)';
-        ctx.fillRect(wall.x + 2, wall.y + 2, wall.w, wall.h);
+        // Wall shadow (bottom-right offset)
+        ctx.fillStyle = 'rgba(0,0,0,0.08)';
+        this.drawRoundedRect(ctx, wall.x + 2, wall.y + 2, wall.w, wall.h, 1);
+        // Wall body
         ctx.fillStyle = colors.wall;
-        ctx.fillRect(wall.x, wall.y, wall.w, wall.h);
+        this.drawRoundedRect(ctx, wall.x, wall.y, wall.w, wall.h, 1);
+        // Wall top highlight
+        ctx.fillStyle = 'rgba(255,255,255,0.25)';
+        if (wall.h > wall.w) {
+          // Vertical wall - highlight left edge
+          ctx.fillRect(wall.x, wall.y, 2, wall.h);
+        } else {
+          // Horizontal wall - highlight top edge
+          ctx.fillRect(wall.x, wall.y, wall.w, 2);
+        }
       }
     }
   }
@@ -751,56 +764,93 @@ export class Renderer {
 
   private drawPlayer(ctx: CanvasRenderingContext2D, state: GameState) {
     const { x, y, direction } = state.player;
-    const bobble = Math.sin(this.time * 8) * (state.player.moving ? 1.5 : 0);
+    const bobble = Math.sin(this.time * 8) * (state.player.moving ? 2 : 0);
+    const breathe = Math.sin(this.time * 2) * 0.5; // idle breathing
 
     ctx.save();
     ctx.translate(x + 12, y + 12 + bobble);
 
-    // Ground shadow
-    ctx.fillStyle = 'rgba(0,0,0,0.1)';
+    // Ground shadow (soft, large)
+    ctx.fillStyle = 'rgba(0,0,0,0.12)';
     ctx.beginPath();
-    ctx.ellipse(0, 10, 10, 4, 0, 0, Math.PI * 2);
+    ctx.ellipse(1, 13, 12, 5, 0, 0, Math.PI * 2);
     ctx.fill();
 
-    // Body
-    ctx.fillStyle = '#546E7A';
-    this.drawRoundedRect(ctx, -10, -10, 20, 20, 6);
-
-    // Body highlight
-    ctx.fillStyle = 'rgba(255,255,255,0.15)';
-    this.drawRoundedRect(ctx, -8, -9, 16, 8, 4);
-
-    // Sensor (front indicator)
-    const sensorOffsets: Record<string, { x: number; y: number }> = {
-      up: { x: 0, y: -11 },
-      down: { x: 0, y: 11 },
-      left: { x: -11, y: 0 },
-      right: { x: 11, y: 0 },
-    };
-    const so = sensorOffsets[direction] || sensorOffsets.down;
-    ctx.fillStyle = '#4FC3F7';
-    ctx.beginPath();
-    ctx.arc(so.x, so.y, 3.5, 0, Math.PI * 2);
-    ctx.fill();
-    // Sensor glow
-    ctx.fillStyle = 'rgba(79, 195, 247, 0.3)';
-    ctx.beginPath();
-    ctx.arc(so.x, so.y, 5.5, 0, Math.PI * 2);
-    ctx.fill();
-
-    // Wheels
-    ctx.fillStyle = '#37474F';
+    // Wheels (draw behind body)
+    ctx.fillStyle = '#2C3E50';
     if (direction === 'left' || direction === 'right') {
-      this.drawRoundedRect(ctx, -8, -13, 4, 4, 1);
-      this.drawRoundedRect(ctx, -8, 9, 4, 4, 1);
-      this.drawRoundedRect(ctx, 4, -13, 4, 4, 1);
-      this.drawRoundedRect(ctx, 4, 9, 4, 4, 1);
+      this.drawRoundedRect(ctx, -9, -14, 5, 5, 2);
+      this.drawRoundedRect(ctx, -9, 9, 5, 5, 2);
+      this.drawRoundedRect(ctx, 4, -14, 5, 5, 2);
+      this.drawRoundedRect(ctx, 4, 9, 5, 5, 2);
     } else {
-      this.drawRoundedRect(ctx, -13, -8, 4, 4, 1);
-      this.drawRoundedRect(ctx, 9, -8, 4, 4, 1);
-      this.drawRoundedRect(ctx, -13, 4, 4, 4, 1);
-      this.drawRoundedRect(ctx, 9, 4, 4, 4, 1);
+      this.drawRoundedRect(ctx, -14, -9, 5, 5, 2);
+      this.drawRoundedRect(ctx, 9, -9, 5, 5, 2);
+      this.drawRoundedRect(ctx, -14, 4, 5, 5, 2);
+      this.drawRoundedRect(ctx, 9, 4, 5, 5, 2);
     }
+
+    // Body - main chassis
+    const bodyGrad = ctx.createLinearGradient(-11, -11, 11, 11);
+    bodyGrad.addColorStop(0, '#607D8B');
+    bodyGrad.addColorStop(1, '#455A64');
+    ctx.fillStyle = bodyGrad;
+    this.drawRoundedRect(ctx, -11, -11, 22, 22, 7);
+
+    // Body outline
+    ctx.strokeStyle = 'rgba(0,0,0,0.15)';
+    ctx.lineWidth = 1;
+    this.strokeRoundedRect(ctx, -11, -11, 22, 22, 7);
+
+    // Top face highlight
+    ctx.fillStyle = 'rgba(255,255,255,0.2)';
+    this.drawRoundedRect(ctx, -9, -10, 18, 9, 5);
+
+    // Eye / sensor panel
+    const so: Record<string, { x: number; y: number }> = {
+      up: { x: 0, y: -8 },
+      down: { x: 0, y: 8 },
+      left: { x: -8, y: 0 },
+      right: { x: 8, y: 0 },
+    };
+    const s = so[direction] || so.down;
+
+    // Sensor glow (animated)
+    const glowSize = 7 + breathe;
+    ctx.fillStyle = 'rgba(41, 182, 246, 0.2)';
+    ctx.beginPath();
+    ctx.arc(s.x, s.y, glowSize, 0, Math.PI * 2);
+    ctx.fill();
+
+    // Sensor ring
+    ctx.strokeStyle = '#29B6F6';
+    ctx.lineWidth = 1.5;
+    ctx.beginPath();
+    ctx.arc(s.x, s.y, 4.5, 0, Math.PI * 2);
+    ctx.stroke();
+
+    // Sensor core
+    ctx.fillStyle = '#29B6F6';
+    ctx.beginPath();
+    ctx.arc(s.x, s.y, 3, 0, Math.PI * 2);
+    ctx.fill();
+    // Sensor shine
+    ctx.fillStyle = 'rgba(255,255,255,0.6)';
+    ctx.beginPath();
+    ctx.arc(s.x - 1, s.y - 1, 1.2, 0, Math.PI * 2);
+    ctx.fill();
+
+    // Small antenna on top
+    ctx.strokeStyle = '#78909C';
+    ctx.lineWidth = 1.5;
+    ctx.beginPath();
+    ctx.moveTo(3, -11);
+    ctx.lineTo(3, -16 + breathe);
+    ctx.stroke();
+    ctx.fillStyle = '#29B6F6';
+    ctx.beginPath();
+    ctx.arc(3, -16 + breathe, 2, 0, Math.PI * 2);
+    ctx.fill();
 
     ctx.restore();
   }
@@ -813,22 +863,38 @@ export class Renderer {
       if (!this.isVisible(camera, room.x, room.y, room.w, room.h)) continue;
 
       for (const sign of room.signs) {
-        // Sign background
-        ctx.font = 'bold 11px system-ui';
+        ctx.font = '600 11px system-ui';
         const metrics = ctx.measureText(sign.text);
-        const pw = metrics.width + 16;
-        const ph = 20;
+        const pw = metrics.width + 20;
+        const ph = 22;
+        const sx = sign.x - pw / 2;
+        const sy = sign.y - 2;
 
-        ctx.fillStyle = 'rgba(255,255,255,0.85)';
-        this.drawRoundedRect(ctx, sign.x - pw / 2, sign.y - 2, pw, ph, 4);
+        // Sign shadow
+        ctx.fillStyle = 'rgba(0,0,0,0.06)';
+        this.drawRoundedRect(ctx, sx + 1, sy + 1, pw, ph, 6);
 
+        // Sign body
+        ctx.fillStyle = 'rgba(255,255,255,0.92)';
+        this.drawRoundedRect(ctx, sx, sy, pw, ph, 6);
+
+        // Color accent bar on left
         if (sign.color) {
           ctx.fillStyle = sign.color;
-          ctx.fillRect(sign.x - pw / 2, sign.y - 2, pw, 3);
+          ctx.beginPath();
+          ctx.moveTo(sx + 6, sy);
+          ctx.lineTo(sx + 6, sy);
+          ctx.quadraticCurveTo(sx, sy, sx, sy + 6);
+          ctx.lineTo(sx, sy + ph - 6);
+          ctx.quadraticCurveTo(sx, sy + ph, sx + 6, sy + ph);
+          ctx.lineTo(sx + 4, sy + ph);
+          ctx.lineTo(sx + 4, sy);
+          ctx.closePath();
+          ctx.fill();
         }
 
-        ctx.fillStyle = '#263445';
-        ctx.fillText(sign.text, sign.x, sign.y + 3);
+        ctx.fillStyle = '#1A2B3C';
+        ctx.fillText(sign.text, sign.x + 2, sign.y + 4);
       }
     }
   }

@@ -23,12 +23,12 @@ export const MODULE_NAMES = [
 
 export type ModuleName = (typeof MODULE_NAMES)[number];
 
-export const MODULE_COLORS: Record<ModuleName, { primary: string; secondary: string; floor: string; wall: string }> = {
-  'What is Robotics?': { primary: '#E8D44D', secondary: '#FFF8E1', floor: '#FAF6E8', wall: '#E8E0C8' },
-  'Robots': { primary: '#9575CD', secondary: '#EDE7F6', floor: '#F0ECF8', wall: '#D5CCE8' },
-  'Industrial Robots': { primary: '#FF8A65', secondary: '#FBE9E7', floor: '#FAF0EC', wall: '#E8D5CC' },
-  'Mobile Robots': { primary: '#4FC3F7', secondary: '#E1F5FE', floor: '#ECF5FA', wall: '#CCE0E8' },
-  'Applications': { primary: '#66BB6A', secondary: '#E8F5E9', floor: '#EEF7EE', wall: '#CCE0CC' },
+export const MODULE_COLORS: Record<ModuleName, { primary: string; secondary: string; floor: string; wall: string; accent: string }> = {
+  'What is Robotics?': { primary: '#F0C930', secondary: '#FFF8E1', floor: '#FDFBF3', wall: '#E6DEC6', accent: '#D4A017' },
+  'Robots': { primary: '#7E57C2', secondary: '#EDE7F6', floor: '#F5F2FA', wall: '#CFC4E0', accent: '#5E35B1' },
+  'Industrial Robots': { primary: '#EF6C00', secondary: '#FFF3E0', floor: '#FDF5EE', wall: '#E0CEBC', accent: '#E65100' },
+  'Mobile Robots': { primary: '#0288D1', secondary: '#E1F5FE', floor: '#F0F8FD', wall: '#BFD6E4', accent: '#01579B' },
+  'Applications': { primary: '#43A047', secondary: '#E8F5E9', floor: '#F2F9F2', wall: '#BDD4BD', accent: '#2E7D32' },
 };
 
 export const OBJECTS: GameObject[] = [

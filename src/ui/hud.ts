@@ -40,11 +40,18 @@ export class HUD {
     const my = 12;
     const scale = mapW / WORLD_W;
 
-    // Background
-    ctx.fillStyle = 'rgba(255,255,255,0.9)';
-    ctx.strokeStyle = '#DCE3E8';
+    // Background with glass effect
+    ctx.fillStyle = 'rgba(255,255,255,0.88)';
+    ctx.strokeStyle = 'rgba(0,0,0,0.06)';
     ctx.lineWidth = 1;
-    this.roundRect(ctx, mx, my, mapW, mapH, 8, true, true);
+    // Shadow
+    ctx.shadowColor = 'rgba(0,0,0,0.08)';
+    ctx.shadowBlur = 12;
+    ctx.shadowOffsetY = 4;
+    this.roundRect(ctx, mx, my, mapW, mapH, 12, true, true);
+    ctx.shadowColor = 'transparent';
+    ctx.shadowBlur = 0;
+    ctx.shadowOffsetY = 0;
 
     // Rooms
     for (const room of ROOMS) {
@@ -114,14 +121,20 @@ export class HUD {
   private drawStatus(ctx: CanvasRenderingContext2D, state: GameState) {
     const sx = 12;
     const sy = 12;
-    const sw = 200;
-    const sh = 68;
+    const sw = 210;
+    const sh = 72;
 
-    // Background
-    ctx.fillStyle = 'rgba(255,255,255,0.9)';
-    ctx.strokeStyle = '#DCE3E8';
+    // Background with glass effect
+    ctx.fillStyle = 'rgba(255,255,255,0.88)';
+    ctx.strokeStyle = 'rgba(0,0,0,0.06)';
     ctx.lineWidth = 1;
-    this.roundRect(ctx, sx, sy, sw, sh, 8, true, true);
+    ctx.shadowColor = 'rgba(0,0,0,0.08)';
+    ctx.shadowBlur = 12;
+    ctx.shadowOffsetY = 4;
+    this.roundRect(ctx, sx, sy, sw, sh, 12, true, true);
+    ctx.shadowColor = 'transparent';
+    ctx.shadowBlur = 0;
+    ctx.shadowOffsetY = 0;
 
     const currentModule = state.getCurrentModule();
     const progress = state.getModuleProgress(currentModule);
@@ -167,17 +180,27 @@ export class HUD {
     const obj = OBJECTS.find(o => o.id === state.nearestObjectId);
     if (!obj) return;
 
-    // Bottom-center prompt
-    const text = `E - Inspect`;
-    ctx.font = 'bold 12px system-ui';
+    // Bottom-center prompt - pill shape with gradient
+    const text = `E  Inspect`;
+    ctx.font = '600 13px system-ui';
     const metrics = ctx.measureText(text);
-    const pw = metrics.width + 24;
-    const ph = 28;
+    const pw = metrics.width + 32;
+    const ph = 34;
     const px = canvasW / 2 - pw / 2;
-    const py = this.canvas.height - 60;
+    const py = this.canvas.height - 64;
 
-    ctx.fillStyle = 'rgba(53, 100, 216, 0.9)';
-    this.roundRect(ctx, px, py, pw, ph, 6, true, false);
+    // Shadow
+    ctx.shadowColor = 'rgba(53, 100, 216, 0.25)';
+    ctx.shadowBlur = 12;
+    ctx.shadowOffsetY = 4;
+    const grad = ctx.createLinearGradient(px, py, px + pw, py + ph);
+    grad.addColorStop(0, '#4A7AE8');
+    grad.addColorStop(1, '#3564D8');
+    ctx.fillStyle = grad;
+    this.roundRect(ctx, px, py, pw, ph, ph / 2, true, false);
+    ctx.shadowColor = 'transparent';
+    ctx.shadowBlur = 0;
+    ctx.shadowOffsetY = 0;
 
     ctx.fillStyle = '#FFFFFF';
     ctx.textAlign = 'center';
