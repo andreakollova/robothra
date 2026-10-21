@@ -631,9 +631,12 @@ export class Renderer {
       const color = MODULE_CIRCLE_COLORS[obj.module] || '#888';
       const sprite = spriteCache[obj.id];
 
+      // Display rooms get larger sprites
+      const isDisplayRoom = placement.roomId === 'rb_display';
+
       if (sprite) {
         // === PNG sprite rendering ===
-        const size = obj.large ? 56 : 48;
+        const size = isDisplayRoom ? 72 : (obj.large ? 56 : 48);
         const halfSize = size / 2;
 
         // Glow pulse for undiscovered
@@ -688,7 +691,7 @@ export class Renderer {
         }
       } else {
         // === Colored circle fallback (no PNG) ===
-        const radius = obj.large ? 22 : 18;
+        const radius = isDisplayRoom ? 28 : (obj.large ? 22 : 18);
 
         // Glow for undiscovered
         if (!discovered) {
