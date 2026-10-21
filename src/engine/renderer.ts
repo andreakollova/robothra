@@ -5,7 +5,7 @@ import { ROOMS, RoomDef, TILE, OBJECT_PLACEMENTS, getAllWalls } from '../data/wo
 import { OBJECTS, MODULE_COLORS, ModuleName } from '../data/objects';
 import { GameState } from './gameState';
 
-// Module color for objects (colored circles for now - will be replaced with PNGs)
+// Module color for objects (fallback circles for objects without PNGs)
 const MODULE_CIRCLE_COLORS: Record<string, string> = {
   'What is Robotics?': '#E8D44D',
   'Robots': '#9575CD',
@@ -13,6 +13,36 @@ const MODULE_CIRCLE_COLORS: Record<string, string> = {
   'Mobile Robots': '#4FC3F7',
   'Applications': '#66BB6A',
 };
+
+// Object sprite cache
+const spriteCache: Record<string, HTMLImageElement | null> = {};
+const spriteLoading = new Set<string>();
+
+function loadSprite(objectId: string): HTMLImageElement | null {
+  if (objectId in spriteCache) return spriteCache[objectId];
+  if (spriteLoading.has(objectId)) return null;
+  spriteLoading.add(objectId);
+  const img = new Image();
+  img.src = `/objects/${objectId}.png`;
+  img.onload = () => {
+    spriteCache[objectId] = img;
+    spriteLoading.delete(objectId);
+  };
+  img.onerror = () => {
+    spriteCache[objectId] = null; // No image available, use circle fallback
+    spriteLoading.delete(objectId);
+  };
+  return null;
+}
+
+// Preload all object sprites
+for (const obj of OBJECTS) {
+  loadSprite(obj.id);
+}
+
+export function getSpriteForObject(objectId: string): HTMLImageElement | null {
+  return spriteCache[objectId] || null;
+}
 
 export class Renderer {
   private ctx: CanvasRenderingContext2D;
@@ -590,74 +620,133 @@ export class Renderer {
 
   private drawObjects(ctx: CanvasRenderingContext2D, camera: Camera, state: GameState) {
     for (const placement of OBJECT_PLACEMENTS) {
-      if (!this.isVisible(camera, placement.x - 20, placement.y - 20, 40, 40)) continue;
+      const spriteSize = 40;
+      if (!this.isVisible(camera, placement.x - spriteSize, placement.y - spriteSize, spriteSize * 2, spriteSize * 2)) continue;
 
       const obj = OBJECTS.find(o => o.id === placement.objectId);
       if (!obj) continue;
 
       const discovered = state.isDiscovered(obj.id);
       const isNearest = state.nearestObjectId === obj.id;
-
-      // Object circle
       const color = MODULE_CIRCLE_COLORS[obj.module] || '#888';
-      const radius = obj.large ? 16 : 12;
+      const sprite = spriteCache[obj.id];
 
-      // Glow for undiscovered
-      if (!discovered) {
-        const pulse = Math.sin(this.time * 2) * 0.15 + 0.85;
-        ctx.fillStyle = this.adjustAlpha(color, 0.2 * pulse);
+      if (sprite) {
+        // === PNG sprite rendering ===
+        const size = obj.large ? 38 : 30;
+        const halfSize = size / 2;
+
+        // Glow pulse for undiscovered
+        if (!discovered) {
+          const pulse = Math.sin(this.time * 2) * 0.15 + 0.85;
+          ctx.fillStyle = this.adjustAlpha(color, 0.18 * pulse);
+          ctx.beginPath();
+          ctx.arc(placement.x, placement.y, halfSize + 10, 0, Math.PI * 2);
+          ctx.fill();
+        }
+
+        // Ground shadow
+        ctx.fillStyle = 'rgba(0,0,0,0.10)';
         ctx.beginPath();
-        ctx.arc(placement.x, placement.y, radius + 8, 0, Math.PI * 2);
+        ctx.ellipse(placement.x + 2, placement.y + halfSize + 2, halfSize * 0.7, 5, 0, 0, Math.PI * 2);
         ctx.fill();
-      }
 
-      // Shadow
-      ctx.fillStyle = 'rgba(0,0,0,0.12)';
-      ctx.beginPath();
-      ctx.ellipse(placement.x + 2, placement.y + radius + 2, radius * 0.8, 4, 0, 0, Math.PI * 2);
-      ctx.fill();
+        // Draw the sprite
+        ctx.save();
+        if (discovered) ctx.globalAlpha = 0.5;
+        ctx.drawImage(sprite, placement.x - halfSize, placement.y - halfSize, size, size);
+        ctx.restore();
 
-      // Main circle
-      ctx.fillStyle = discovered ? this.adjustAlpha(color, 0.5) : color;
-      ctx.beginPath();
-      ctx.arc(placement.x, placement.y, radius, 0, Math.PI * 2);
-      ctx.fill();
+        // Interaction outline
+        if (isNearest && !discovered) {
+          ctx.strokeStyle = '#3564D8';
+          ctx.lineWidth = 2.5;
+          ctx.beginPath();
+          ctx.arc(placement.x, placement.y, halfSize + 4, 0, Math.PI * 2);
+          ctx.stroke();
+        }
 
-      // Inner highlight
-      ctx.fillStyle = 'rgba(255,255,255,0.3)';
-      ctx.beginPath();
-      ctx.arc(placement.x - radius * 0.2, placement.y - radius * 0.2, radius * 0.5, 0, Math.PI * 2);
-      ctx.fill();
+        // Checkmark overlay for discovered
+        if (discovered) {
+          ctx.fillStyle = color;
+          ctx.beginPath();
+          ctx.arc(placement.x + halfSize - 4, placement.y - halfSize + 4, 8, 0, Math.PI * 2);
+          ctx.fill();
+          ctx.fillStyle = '#FFFFFF';
+          ctx.font = 'bold 10px system-ui';
+          ctx.textAlign = 'center';
+          ctx.textBaseline = 'middle';
+          ctx.fillText('\u2713', placement.x + halfSize - 4, placement.y - halfSize + 4);
+        }
 
-      // Outline for nearest
-      if (isNearest && !discovered) {
-        ctx.strokeStyle = '#3564D8';
-        ctx.lineWidth = 2.5;
+        // SCAN label for large undiscovered
+        if (obj.large && !discovered) {
+          ctx.fillStyle = 'rgba(255,255,255,0.85)';
+          ctx.font = '8px system-ui';
+          ctx.textAlign = 'center';
+          ctx.fillText('SCAN', placement.x, placement.y + halfSize + 12);
+        }
+      } else {
+        // === Colored circle fallback (no PNG) ===
+        const radius = obj.large ? 16 : 12;
+
+        // Glow for undiscovered
+        if (!discovered) {
+          const pulse = Math.sin(this.time * 2) * 0.15 + 0.85;
+          ctx.fillStyle = this.adjustAlpha(color, 0.2 * pulse);
+          ctx.beginPath();
+          ctx.arc(placement.x, placement.y, radius + 8, 0, Math.PI * 2);
+          ctx.fill();
+        }
+
+        // Shadow
+        ctx.fillStyle = 'rgba(0,0,0,0.12)';
         ctx.beginPath();
-        ctx.arc(placement.x, placement.y, radius + 3, 0, Math.PI * 2);
-        ctx.stroke();
-      }
+        ctx.ellipse(placement.x + 2, placement.y + radius + 2, radius * 0.8, 4, 0, 0, Math.PI * 2);
+        ctx.fill();
 
-      // Checkmark for discovered
-      if (discovered) {
-        ctx.fillStyle = '#FFFFFF';
-        ctx.font = 'bold 12px system-ui';
-        ctx.textAlign = 'center';
-        ctx.textBaseline = 'middle';
-        ctx.fillText('\u2713', placement.x, placement.y);
-      }
+        // Main circle
+        ctx.fillStyle = discovered ? this.adjustAlpha(color, 0.5) : color;
+        ctx.beginPath();
+        ctx.arc(placement.x, placement.y, radius, 0, Math.PI * 2);
+        ctx.fill();
 
-      // Large indicator
-      if (obj.large && !discovered) {
-        ctx.fillStyle = '#FFFFFF';
-        ctx.font = '8px system-ui';
-        ctx.textAlign = 'center';
-        ctx.fillText('SCAN', placement.x, placement.y + radius + 12);
+        // Inner highlight
+        ctx.fillStyle = 'rgba(255,255,255,0.3)';
+        ctx.beginPath();
+        ctx.arc(placement.x - radius * 0.2, placement.y - radius * 0.2, radius * 0.5, 0, Math.PI * 2);
+        ctx.fill();
+
+        // Outline for nearest
+        if (isNearest && !discovered) {
+          ctx.strokeStyle = '#3564D8';
+          ctx.lineWidth = 2.5;
+          ctx.beginPath();
+          ctx.arc(placement.x, placement.y, radius + 3, 0, Math.PI * 2);
+          ctx.stroke();
+        }
+
+        // Checkmark for discovered
+        if (discovered) {
+          ctx.fillStyle = '#FFFFFF';
+          ctx.font = 'bold 12px system-ui';
+          ctx.textAlign = 'center';
+          ctx.textBaseline = 'middle';
+          ctx.fillText('\u2713', placement.x, placement.y);
+        }
+
+        // Large indicator
+        if (obj.large && !discovered) {
+          ctx.fillStyle = '#FFFFFF';
+          ctx.font = '8px system-ui';
+          ctx.textAlign = 'center';
+          ctx.fillText('SCAN', placement.x, placement.y + radius + 12);
+        }
       }
     }
   }
 
-  drawPlayer(ctx: CanvasRenderingContext2D, state: GameState) {
+  private drawPlayer(ctx: CanvasRenderingContext2D, state: GameState) {
     const { x, y, direction } = state.player;
     const bobble = Math.sin(this.time * 8) * (state.player.moving ? 1.5 : 0);
 

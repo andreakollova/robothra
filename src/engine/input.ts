@@ -20,6 +20,7 @@ export interface InputState {
   tab: boolean;
   tabJustPressed: boolean;
   shiftTab: boolean;
+  shift: boolean;
   mouseX: number;
   mouseY: number;
   mouseClicked: boolean;
@@ -106,6 +107,7 @@ export class InputManager {
       tab: this.keys.has('Tab'),
       tabJustPressed: this.justPressed.has('Tab'),
       shiftTab: shift && this.keys.has('Tab'),
+      shift,
       mouseX: this._mouseX,
       mouseY: this._mouseY,
       mouseClicked: this._mouseClicked,

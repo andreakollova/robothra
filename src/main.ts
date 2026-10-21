@@ -164,6 +164,7 @@ function gameLoop(now: number) {
     down: inputState.down,
     left: inputState.left,
     right: inputState.right,
+    shift: inputState.shift,
   });
 
   // Camera follow

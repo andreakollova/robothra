@@ -8,6 +8,7 @@ import { SaveData, loadGame, saveGame, QuizAttempt } from './save';
 import { playStep, playDiscovery } from './sound';
 
 const PLAYER_SPEED = 180; // px/sec
+const PLAYER_BOOST = 360; // px/sec when holding Shift
 const PLAYER_SIZE = 24;
 const INTERACTION_DIST = 60;
 const STEP_INTERVAL = 0.25;
@@ -81,7 +82,7 @@ export class GameState {
     return true;
   }
 
-  update(dt: number, input: { up: boolean; down: boolean; left: boolean; right: boolean }) {
+  update(dt: number, input: { up: boolean; down: boolean; left: boolean; right: boolean; shift?: boolean }) {
     if (this.overlay !== 'none' && this.overlay !== 'hint') return;
 
     // Movement
@@ -99,8 +100,9 @@ export class GameState {
       dx /= len;
       dy /= len;
 
-      const newX = this.player.x + dx * PLAYER_SPEED * dt;
-      const newY = this.player.y + dy * PLAYER_SPEED * dt;
+      const speed = input.shift ? PLAYER_BOOST : PLAYER_SPEED;
+      const newX = this.player.x + dx * speed * dt;
+      const newY = this.player.y + dy * speed * dt;
 
       const resolved = resolveCollision(
         this.player.x, this.player.y, PLAYER_SIZE, PLAYER_SIZE,
@@ -293,6 +295,28 @@ export class GameState {
   openEditor() {
     this.overlay = 'editor';
     this.playTimeActive = false;
+  }
+
+  teleportToRoom(roomId: string) {
+    const room = ROOMS.find(r => r.id === roomId);
+    if (!room) return;
+    // Place player in center of room, avoiding furniture
+    this.player.x = room.x + room.w / 2 - PLAYER_SIZE / 2;
+    this.player.y = room.y + room.h / 2 - PLAYER_SIZE / 2;
+    // If stuck in collision, nudge
+    if (!this.isWalkable(this.player.x, this.player.y)) {
+      // Try offsets
+      for (const [ox, oy] of [[0, -48], [0, 48], [-48, 0], [48, 0], [-48, -48], [48, 48]]) {
+        const tx = room.x + room.w / 2 + ox - PLAYER_SIZE / 2;
+        const ty = room.y + room.h / 2 + oy - PLAYER_SIZE / 2;
+        if (this.isWalkable(tx, ty)) {
+          this.player.x = tx;
+          this.player.y = ty;
+          break;
+        }
+      }
+    }
+    this.overlay = 'none';
   }
 
   isDiscovered(objectId: string): boolean {

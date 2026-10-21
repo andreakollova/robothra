@@ -7,6 +7,7 @@ import { ROOMS, OBJECT_PLACEMENTS, WORLD_W, WORLD_H, TILE } from '../data/world'
 import { playUIClick, playCorrect, playIncorrect, setSoundEnabled, isSoundEnabled } from '../engine/sound';
 import { clearSave } from '../engine/save';
 import { InputManager } from '../engine/input';
+import { getSpriteForObject } from '../engine/renderer';
 
 const MODULE_CIRCLE_COLORS: Record<string, string> = {
   'What is Robotics?': '#E8D44D',
@@ -55,9 +56,10 @@ export class UIManager {
           <div style="font-weight:600;color:#263445;margin-bottom:8px">Controls</div>
           <div style="font-size:13px;color:#627185;line-height:1.8">
             <b>WASD / Arrow keys</b> - Move<br>
+            <b>Shift</b> - Run faster<br>
             <b>E</b> - Inspect nearby object<br>
-            <b>M</b> - Toggle map<br>
-            <b>J</b> - Toggle journal<br>
+            <b>M</b> - Map (click a room to teleport)<br>
+            <b>J</b> - Journal<br>
             <b>Esc</b> - Pause / close overlay
           </div>
         </div>
@@ -88,8 +90,11 @@ export class UIManager {
           <span style="font-size:12px;color:#627185;font-weight:500">${obj.module}</span>
         </div>
         <div style="display:flex;justify-content:center;margin-bottom:20px">
-          <div style="width:120px;height:120px;border-radius:16px;background:${color}20;display:flex;align-items:center;justify-content:center">
-            <div style="width:60px;height:60px;border-radius:50%;background:${color}"></div>
+          <div style="width:160px;height:160px;border-radius:16px;background:${color}15;display:flex;align-items:center;justify-content:center">
+            ${getSpriteForObject(obj.id)
+              ? `<img src="/objects/${obj.id}.png" style="width:130px;height:130px;object-fit:contain" alt="${obj.name}">`
+              : `<div style="width:60px;height:60px;border-radius:50%;background:${color}"></div>`
+            }
           </div>
         </div>
         <h2 style="font-size:18px;font-weight:700;color:#263445;margin:0 0 8px">${obj.name}</h2>
@@ -303,7 +308,7 @@ export class UIManager {
       const ry = room.y * scale;
       const rw = room.w * scale;
       const rh = room.h * scale;
-      roomsHtml += `<div style="position:absolute;left:${rx}px;top:${ry}px;width:${rw}px;height:${rh}px;background:${colors?.floor || '#eee'};border:1px solid ${colors?.wall || '#ccc'};border-radius:3px" title="${room.name}"></div>`;
+      roomsHtml += `<div class="map-room" data-room="${room.id}" style="position:absolute;left:${rx}px;top:${ry}px;width:${rw}px;height:${rh}px;background:${colors?.floor || '#eee'};border:1px solid ${colors?.wall || '#ccc'};border-radius:3px;cursor:pointer;transition:filter 0.15s" title="${room.name} (click to teleport)"></div>`;
     }
 
     // Hall
@@ -389,6 +394,24 @@ export class UIManager {
       this.state.forceSave();
       this.update();
     });
+
+    // Teleport by clicking rooms on map
+    document.querySelectorAll('.map-room').forEach(el => {
+      el.addEventListener('click', () => {
+        const roomId = (el as HTMLElement).dataset.room;
+        if (roomId) {
+          playUIClick();
+          this.state.teleportToRoom(roomId);
+          this.update();
+        }
+      });
+      (el as HTMLElement).addEventListener('mouseenter', () => {
+        (el as HTMLElement).style.filter = 'brightness(0.9)';
+      });
+      (el as HTMLElement).addEventListener('mouseleave', () => {
+        (el as HTMLElement).style.filter = '';
+      });
+    });
   }
 
   private renderJournal() {
@@ -467,8 +490,11 @@ export class UIManager {
         const disc = this.state.isDiscovered(obj.id);
         html += `
           <div style="padding:8px;border-radius:8px;background:${disc ? '#F8F9FA' : '#F0F0F0'};border:1px solid ${disc ? '#DCE3E8' : '#E0E0E0'}">
-            <div style="display:flex;align-items:center;gap:4px;margin-bottom:4px">
-              <div style="width:16px;height:16px;border-radius:50%;background:${disc ? color : '#CCC'};flex-shrink:0"></div>
+            <div style="display:flex;align-items:center;gap:6px;margin-bottom:4px">
+              ${disc && getSpriteForObject(obj.id)
+                ? `<img src="/objects/${obj.id}.png" style="width:24px;height:24px;object-fit:contain;flex-shrink:0" alt="">`
+                : `<div style="width:18px;height:18px;border-radius:50%;background:${disc ? color : '#CCC'};flex-shrink:0"></div>`
+              }
               <div style="font-size:11px;font-weight:600;color:${disc ? '#263445' : '#B0B0B0'};overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${disc ? obj.name : '???'}</div>
             </div>
             ${disc ? `<div style="font-size:10px;color:#627185;line-height:1.4">${obj.description.slice(0, 80)}${obj.description.length > 80 ? '...' : ''}</div>` : ''}
