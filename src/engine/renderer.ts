@@ -633,7 +633,7 @@ export class Renderer {
 
       if (sprite) {
         // === PNG sprite rendering ===
-        const size = obj.large ? 38 : 30;
+        const size = obj.large ? 56 : 48;
         const halfSize = size / 2;
 
         // Glow pulse for undiscovered
@@ -688,7 +688,7 @@ export class Renderer {
         }
       } else {
         // === Colored circle fallback (no PNG) ===
-        const radius = obj.large ? 16 : 12;
+        const radius = obj.large ? 22 : 18;
 
         // Glow for undiscovered
         if (!discovered) {

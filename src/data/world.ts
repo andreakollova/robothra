@@ -690,111 +690,110 @@ export const ROOMS: RoomDef[] = [
 // ========================
 // OBJECT PLACEMENTS - all 75 objects
 // ========================
+// All objects placed in walkable areas (avoiding furniture collision boxes)
+// Each room is RW x RH (12T x 9T). Walls are 12px thick at edges.
+// Furniture is typically at y: T*0.5-T*3.5 (top) and y: T*5-T*7.5 (bottom).
+// Safe walkable band is roughly y: T*4 center, plus edges T*7.5+ and scattered gaps.
 export const OBJECT_PLACEMENTS: ObjectPlacement[] = [
   // ====== Zone 1: What is Robotics? (15 objects) ======
-  // Reception (3)
-  { objectId: 'wr01', roomId: 'wr_reception', x: wr_reception_x + T * 7, y: wr_reception_y + T * 4 },
-  { objectId: 'wr02', roomId: 'wr_reception', x: wr_reception_x + T * 9.5, y: wr_reception_y + T * 4 },
-  { objectId: 'wr08', roomId: 'wr_reception', x: wr_reception_x + T * 5, y: wr_reception_y + T * 6 },
-  // Exhibition (4)
-  { objectId: 'wr05', roomId: 'wr_exhibition', x: wr_exhibition_x + T * 3, y: wr_exhibition_y + T * 3 },
-  { objectId: 'wr06', roomId: 'wr_exhibition', x: wr_exhibition_x + T * 7, y: wr_exhibition_y + T * 3 },
-  { objectId: 'wr07', roomId: 'wr_exhibition', x: wr_exhibition_x + T * 3, y: wr_exhibition_y + T * 6.5 },
-  { objectId: 'wr14', roomId: 'wr_exhibition', x: wr_exhibition_x + T * 7, y: wr_exhibition_y + T * 6.5 },
-  // History (4)
-  { objectId: 'wr09', roomId: 'wr_history', x: wr_history_x + T * 5, y: wr_history_y + T * 1.5 },
-  { objectId: 'wr10', roomId: 'wr_history', x: wr_history_x + T * 2, y: wr_history_y + T * 6 },
-  { objectId: 'wr11', roomId: 'wr_history', x: wr_history_x + T * 6, y: wr_history_y + T * 6 },
-  { objectId: 'wr15', roomId: 'wr_history', x: wr_history_x + T * 9, y: wr_history_y + T * 3 },
-  // Demo Lab (4)
-  { objectId: 'wr03', roomId: 'wr_demolab', x: wr_demolab_x + T * 8, y: wr_demolab_y + T * 5 },
-  { objectId: 'wr04', roomId: 'wr_demolab', x: wr_demolab_x + T * 5, y: wr_demolab_y + T * 5 },
-  { objectId: 'wr12', roomId: 'wr_demolab', x: wr_demolab_x + T * 2, y: wr_demolab_y + T * 5 },
-  { objectId: 'wr13', roomId: 'wr_demolab', x: wr_demolab_x + T * 9, y: wr_demolab_y + T * 7 },
+  { objectId: 'wr01', roomId: 'wr_reception', x: wr_reception_x + T * 7, y: wr_reception_y + T * 4.5 },
+  { objectId: 'wr02', roomId: 'wr_reception', x: wr_reception_x + T * 9, y: wr_reception_y + T * 4.5 },
+  { objectId: 'wr08', roomId: 'wr_reception', x: wr_reception_x + T * 5, y: wr_reception_y + T * 6.5 },
+
+  { objectId: 'wr05', roomId: 'wr_exhibition', x: wr_exhibition_x + T * 5, y: wr_exhibition_y + T * 4.5 },
+  { objectId: 'wr06', roomId: 'wr_exhibition', x: wr_exhibition_x + T * 9, y: wr_exhibition_y + T * 4.5 },
+  { objectId: 'wr07', roomId: 'wr_exhibition', x: wr_exhibition_x + T * 2, y: wr_exhibition_y + T * 4.5 },
+  { objectId: 'wr14', roomId: 'wr_exhibition', x: wr_exhibition_x + T * 7, y: wr_exhibition_y + T * 4.5 },
+
+  { objectId: 'wr09', roomId: 'wr_history', x: wr_history_x + T * 6, y: wr_history_y + T * 3 },
+  { objectId: 'wr10', roomId: 'wr_history', x: wr_history_x + T * 3, y: wr_history_y + T * 6 },
+  { objectId: 'wr11', roomId: 'wr_history', x: wr_history_x + T * 7, y: wr_history_y + T * 6 },
+  { objectId: 'wr15', roomId: 'wr_history', x: wr_history_x + T * 9.5, y: wr_history_y + T * 3 },
+
+  { objectId: 'wr03', roomId: 'wr_demolab', x: wr_demolab_x + T * 8, y: wr_demolab_y + T * 4.5 },
+  { objectId: 'wr04', roomId: 'wr_demolab', x: wr_demolab_x + T * 5, y: wr_demolab_y + T * 4.5 },
+  { objectId: 'wr12', roomId: 'wr_demolab', x: wr_demolab_x + T * 2, y: wr_demolab_y + T * 4.5 },
+  { objectId: 'wr13', roomId: 'wr_demolab', x: wr_demolab_x + T * 10, y: wr_demolab_y + T * 4.5 },
 
   // ====== Zone 2: Robots (15 objects) ======
-  // Workshop (4)
   { objectId: 'rb01', roomId: 'rb_workshop', x: rb_workshop_x + T * 3, y: rb_workshop_y + T * 4 },
   { objectId: 'rb02', roomId: 'rb_workshop', x: rb_workshop_x + T * 8, y: rb_workshop_y + T * 4 },
-  { objectId: 'rb10', roomId: 'rb_workshop', x: rb_workshop_x + T * 6, y: rb_workshop_y + T * 7 },
-  { objectId: 'rb11', roomId: 'rb_workshop', x: rb_workshop_x + T * 9, y: rb_workshop_y + T * 7 },
-  // Display (6)
-  { objectId: 'rb03', roomId: 'rb_display', x: rb_display_x + T * 2.5, y: rb_display_y + T * 2.5 },
-  { objectId: 'rb04', roomId: 'rb_display', x: rb_display_x + T * 6, y: rb_display_y + T * 2.5 },
-  { objectId: 'rb05', roomId: 'rb_display', x: rb_display_x + T * 9.5, y: rb_display_y + T * 2.5 },
-  { objectId: 'rb06', roomId: 'rb_display', x: rb_display_x + T * 2.5, y: rb_display_y + T * 6 },
-  { objectId: 'rb07', roomId: 'rb_display', x: rb_display_x + T * 6, y: rb_display_y + T * 6 },
-  { objectId: 'rb08', roomId: 'rb_display', x: rb_display_x + T * 9.5, y: rb_display_y + T * 6 },
-  // Calibration (3)
-  { objectId: 'rb09', roomId: 'rb_calibration', x: rb_calibration_x + T * 3, y: rb_calibration_y + T * 6 },
-  { objectId: 'rb12', roomId: 'rb_calibration', x: rb_calibration_x + T * 7, y: rb_calibration_y + T * 6 },
-  { objectId: 'rb13', roomId: 'rb_calibration', x: rb_calibration_x + T * 5, y: rb_calibration_y + T * 3 },
-  // Office (2)
-  { objectId: 'rb14', roomId: 'rb_office', x: rb_office_x + T * 3, y: rb_office_y + T * 5 },
-  { objectId: 'rb15', roomId: 'rb_office', x: rb_office_x + T * 8, y: rb_office_y + T * 5 },
+  { objectId: 'rb10', roomId: 'rb_workshop', x: rb_workshop_x + T * 7, y: rb_workshop_y + T * 7.5 },
+  { objectId: 'rb11', roomId: 'rb_workshop', x: rb_workshop_x + T * 10, y: rb_workshop_y + T * 7.5 },
+
+  { objectId: 'rb03', roomId: 'rb_display', x: rb_display_x + T * 2.5, y: rb_display_y + T * 4 },
+  { objectId: 'rb04', roomId: 'rb_display', x: rb_display_x + T * 5, y: rb_display_y + T * 4 },
+  { objectId: 'rb05', roomId: 'rb_display', x: rb_display_x + T * 8, y: rb_display_y + T * 4 },
+  { objectId: 'rb06', roomId: 'rb_display', x: rb_display_x + T * 2.5, y: rb_display_y + T * 7.5 },
+  { objectId: 'rb07', roomId: 'rb_display', x: rb_display_x + T * 5, y: rb_display_y + T * 7.5 },
+  { objectId: 'rb08', roomId: 'rb_display', x: rb_display_x + T * 8, y: rb_display_y + T * 7.5 },
+
+  { objectId: 'rb09', roomId: 'rb_calibration', x: rb_calibration_x + T * 3, y: rb_calibration_y + T * 5 },
+  { objectId: 'rb12', roomId: 'rb_calibration', x: rb_calibration_x + T * 7, y: rb_calibration_y + T * 5 },
+  { objectId: 'rb13', roomId: 'rb_calibration', x: rb_calibration_x + T * 5, y: rb_calibration_y + T * 5 },
+
+  { objectId: 'rb14', roomId: 'rb_office', x: rb_office_x + T * 6, y: rb_office_y + T * 4.5 },
+  { objectId: 'rb15', roomId: 'rb_office', x: rb_office_x + T * 9, y: rb_office_y + T * 4.5 },
 
   // ====== Zone 3: Industrial Robots (15 objects) ======
-  // Production (2)
-  { objectId: 'ir14', roomId: 'ir_production', x: ir_production_x + T * 9, y: ir_production_y + T * 5 },
-  { objectId: 'ir15', roomId: 'ir_production', x: ir_production_x + T * 4, y: ir_production_y + T * 5 },
-  // Motors (5)
-  { objectId: 'ir01', roomId: 'ir_motors', x: ir_motors_x + T * 3, y: ir_motors_y + T * 2.5 },
-  { objectId: 'ir02', roomId: 'ir_motors', x: ir_motors_x + T * 8, y: ir_motors_y + T * 2.5 },
-  { objectId: 'ir03', roomId: 'ir_motors', x: ir_motors_x + T * 4, y: ir_motors_y + T * 5.5 },
-  { objectId: 'ir04', roomId: 'ir_motors', x: ir_motors_x + T * 7, y: ir_motors_y + T * 5.5 },
-  { objectId: 'ir05', roomId: 'ir_motors', x: ir_motors_x + T * 10, y: ir_motors_y + T * 5.5 },
-  // Sensors (5)
-  { objectId: 'ir06', roomId: 'ir_sensors', x: ir_sensors_x + T * 3, y: ir_sensors_y + T * 3 },
-  { objectId: 'ir07', roomId: 'ir_sensors', x: ir_sensors_x + T * 6, y: ir_sensors_y + T * 3 },
-  { objectId: 'ir08', roomId: 'ir_sensors', x: ir_sensors_x + T * 9, y: ir_sensors_y + T * 3 },
-  { objectId: 'ir09', roomId: 'ir_sensors', x: ir_sensors_x + T * 3, y: ir_sensors_y + T * 6 },
-  { objectId: 'ir10', roomId: 'ir_sensors', x: ir_sensors_x + T * 8, y: ir_sensors_y + T * 6 },
-  // Grippers (3)
-  { objectId: 'ir11', roomId: 'ir_grippers', x: ir_grippers_x + T * 3, y: ir_grippers_y + T * 3 },
-  { objectId: 'ir12', roomId: 'ir_grippers', x: ir_grippers_x + T * 6, y: ir_grippers_y + T * 3 },
-  { objectId: 'ir13', roomId: 'ir_grippers', x: ir_grippers_x + T * 9, y: ir_grippers_y + T * 3 },
+  { objectId: 'ir14', roomId: 'ir_production', x: ir_production_x + T * 6, y: ir_production_y + T * 5 },
+  { objectId: 'ir15', roomId: 'ir_production', x: ir_production_x + T * 3, y: ir_production_y + T * 5 },
+
+  { objectId: 'ir01', roomId: 'ir_motors', x: ir_motors_x + T * 2, y: ir_motors_y + T * 4 },
+  { objectId: 'ir02', roomId: 'ir_motors', x: ir_motors_x + T * 5, y: ir_motors_y + T * 4 },
+  { objectId: 'ir03', roomId: 'ir_motors', x: ir_motors_x + T * 8, y: ir_motors_y + T * 4 },
+  { objectId: 'ir04', roomId: 'ir_motors', x: ir_motors_x + T * 10, y: ir_motors_y + T * 4 },
+  { objectId: 'ir05', roomId: 'ir_motors', x: ir_motors_x + T * 6, y: ir_motors_y + T * 7.5 },
+
+  { objectId: 'ir06', roomId: 'ir_sensors', x: ir_sensors_x + T * 2, y: ir_sensors_y + T * 4.5 },
+  { objectId: 'ir07', roomId: 'ir_sensors', x: ir_sensors_x + T * 5, y: ir_sensors_y + T * 4.5 },
+  { objectId: 'ir08', roomId: 'ir_sensors', x: ir_sensors_x + T * 8, y: ir_sensors_y + T * 4.5 },
+  { objectId: 'ir09', roomId: 'ir_sensors', x: ir_sensors_x + T * 3, y: ir_sensors_y + T * 5.5 },
+  { objectId: 'ir10', roomId: 'ir_sensors', x: ir_sensors_x + T * 9, y: ir_sensors_y + T * 5.5 },
+
+  { objectId: 'ir11', roomId: 'ir_grippers', x: ir_grippers_x + T * 3, y: ir_grippers_y + T * 5 },
+  { objectId: 'ir12', roomId: 'ir_grippers', x: ir_grippers_x + T * 6, y: ir_grippers_y + T * 5 },
+  { objectId: 'ir13', roomId: 'ir_grippers', x: ir_grippers_x + T * 9, y: ir_grippers_y + T * 5 },
 
   // ====== Zone 4: Mobile Robots (15 objects) ======
-  // Garage (3)
-  { objectId: 'mr01', roomId: 'mr_garage', x: mr_garage_x + T * 3, y: mr_garage_y + T * 3 },
-  { objectId: 'mr02', roomId: 'mr_garage', x: mr_garage_x + T * 7, y: mr_garage_y + T * 5 },
-  { objectId: 'mr03', roomId: 'mr_garage', x: mr_garage_x + T * 7, y: mr_garage_y + T * 3 },
-  // Charging (2)
-  { objectId: 'mr04', roomId: 'mr_charging', x: mr_charging_x + T * 5, y: mr_charging_y + T * 5 },
-  { objectId: 'mr05', roomId: 'mr_charging', x: mr_charging_x + T * 5, y: mr_charging_y + T * 3 },
-  // Sensor Workshop (6)
-  { objectId: 'mr06', roomId: 'mr_sensor_workshop', x: mr_sensor_x + T * 3, y: mr_sensor_y + T * 3 },
-  { objectId: 'mr07', roomId: 'mr_sensor_workshop', x: mr_sensor_x + T * 6, y: mr_sensor_y + T * 3 },
-  { objectId: 'mr08', roomId: 'mr_sensor_workshop', x: mr_sensor_x + T * 9, y: mr_sensor_y + T * 3 },
-  { objectId: 'mr09', roomId: 'mr_sensor_workshop', x: mr_sensor_x + T * 3, y: mr_sensor_y + T * 6 },
-  { objectId: 'mr11', roomId: 'mr_sensor_workshop', x: mr_sensor_x + T * 6, y: mr_sensor_y + T * 6 },
-  { objectId: 'mr12', roomId: 'mr_sensor_workshop', x: mr_sensor_x + T * 9, y: mr_sensor_y + T * 6 },
-  // Courtyard (4)
-  { objectId: 'mr10', roomId: 'mr_courtyard', x: mr_courtyard_x + T * 3, y: mr_courtyard_y + T * 3 },
-  { objectId: 'mr13', roomId: 'mr_courtyard', x: mr_courtyard_x + T * 3, y: mr_courtyard_y + T * 6 },
-  { objectId: 'mr14', roomId: 'mr_courtyard', x: mr_courtyard_x + T * 9, y: mr_courtyard_y + T * 6 },
-  { objectId: 'mr15', roomId: 'mr_courtyard', x: mr_courtyard_x + T * 8, y: mr_courtyard_y + T * 3 },
+  { objectId: 'mr01', roomId: 'mr_garage', x: mr_garage_x + T * 3, y: mr_garage_y + T * 4 },
+  { objectId: 'mr02', roomId: 'mr_garage', x: mr_garage_x + T * 8, y: mr_garage_y + T * 4 },
+  { objectId: 'mr03', roomId: 'mr_garage', x: mr_garage_x + T * 6, y: mr_garage_y + T * 7.5 },
+
+  { objectId: 'mr04', roomId: 'mr_charging', x: mr_charging_x + T * 5.5, y: mr_charging_y + T * 5 },
+  { objectId: 'mr05', roomId: 'mr_charging', x: mr_charging_x + T * 5.5, y: mr_charging_y + T * 7.5 },
+
+  { objectId: 'mr06', roomId: 'mr_sensor_workshop', x: mr_sensor_x + T * 2, y: mr_sensor_y + T * 4.5 },
+  { objectId: 'mr07', roomId: 'mr_sensor_workshop', x: mr_sensor_x + T * 5, y: mr_sensor_y + T * 4.5 },
+  { objectId: 'mr08', roomId: 'mr_sensor_workshop', x: mr_sensor_x + T * 8, y: mr_sensor_y + T * 4.5 },
+  { objectId: 'mr09', roomId: 'mr_sensor_workshop', x: mr_sensor_x + T * 2, y: mr_sensor_y + T * 7.5 },
+  { objectId: 'mr11', roomId: 'mr_sensor_workshop', x: mr_sensor_x + T * 5, y: mr_sensor_y + T * 7.5 },
+  { objectId: 'mr12', roomId: 'mr_sensor_workshop', x: mr_sensor_x + T * 8, y: mr_sensor_y + T * 7.5 },
+
+  { objectId: 'mr10', roomId: 'mr_courtyard', x: mr_courtyard_x + T * 4, y: mr_courtyard_y + T * 4.5 },
+  { objectId: 'mr13', roomId: 'mr_courtyard', x: mr_courtyard_x + T * 4, y: mr_courtyard_y + T * 7 },
+  { objectId: 'mr14', roomId: 'mr_courtyard', x: mr_courtyard_x + T * 8, y: mr_courtyard_y + T * 7 },
+  { objectId: 'mr15', roomId: 'mr_courtyard', x: mr_courtyard_x + T * 8, y: mr_courtyard_y + T * 4.5 },
 
   // ====== Zone 5: Applications (15 objects) ======
-  // Industrial Apps (2)
   { objectId: 'ap01', roomId: 'ap_industrial', x: ap_industrial_x + T * 3, y: ap_industrial_y + T * 5 },
   { objectId: 'ap02', roomId: 'ap_industrial', x: ap_industrial_x + T * 8, y: ap_industrial_y + T * 5 },
-  // Healthcare, Agriculture & Space (6)
-  { objectId: 'ap03', roomId: 'ap_healthcare', x: ap_healthcare_x + T * 3, y: ap_healthcare_y + T * 2.5 },
-  { objectId: 'ap04', roomId: 'ap_healthcare', x: ap_healthcare_x + T * 7, y: ap_healthcare_y + T * 2.5 },
-  { objectId: 'ap05', roomId: 'ap_healthcare', x: ap_healthcare_x + T * 3, y: ap_healthcare_y + T * 6 },
-  { objectId: 'ap06', roomId: 'ap_healthcare', x: ap_healthcare_x + T * 5.5, y: ap_healthcare_y + T * 6 },
-  { objectId: 'ap07', roomId: 'ap_healthcare', x: ap_healthcare_x + T * 8, y: ap_healthcare_y + T * 6 },
-  { objectId: 'ap08', roomId: 'ap_healthcare', x: ap_healthcare_x + T * 10, y: ap_healthcare_y + T * 6 },
-  // Logistics & Construction (4)
-  { objectId: 'ap09', roomId: 'ap_logistics', x: ap_logistics_x + T * 3, y: ap_logistics_y + T * 4 },
-  { objectId: 'ap10', roomId: 'ap_logistics', x: ap_logistics_x + T * 6, y: ap_logistics_y + T * 7 },
-  { objectId: 'ap11', roomId: 'ap_logistics', x: ap_logistics_x + T * 8, y: ap_logistics_y + T * 4 },
-  { objectId: 'ap12', roomId: 'ap_logistics', x: ap_logistics_x + T * 10, y: ap_logistics_y + T * 4 },
-  // Wearables & Social (3)
-  { objectId: 'ap13', roomId: 'ap_wearables', x: ap_wearables_x + T * 3, y: ap_wearables_y + T * 3 },
-  { objectId: 'ap14', roomId: 'ap_wearables', x: ap_wearables_x + T * 7, y: ap_wearables_y + T * 3 },
-  { objectId: 'ap15', roomId: 'ap_wearables', x: ap_wearables_x + T * 10, y: ap_wearables_y + T * 3 },
+
+  { objectId: 'ap03', roomId: 'ap_healthcare', x: ap_healthcare_x + T * 2, y: ap_healthcare_y + T * 4.5 },
+  { objectId: 'ap04', roomId: 'ap_healthcare', x: ap_healthcare_x + T * 5, y: ap_healthcare_y + T * 4.5 },
+  { objectId: 'ap05', roomId: 'ap_healthcare', x: ap_healthcare_x + T * 8, y: ap_healthcare_y + T * 4.5 },
+  { objectId: 'ap06', roomId: 'ap_healthcare', x: ap_healthcare_x + T * 2, y: ap_healthcare_y + T * 7.5 },
+  { objectId: 'ap07', roomId: 'ap_healthcare', x: ap_healthcare_x + T * 6, y: ap_healthcare_y + T * 7.5 },
+  { objectId: 'ap08', roomId: 'ap_healthcare', x: ap_healthcare_x + T * 10, y: ap_healthcare_y + T * 7.5 },
+
+  { objectId: 'ap09', roomId: 'ap_logistics', x: ap_logistics_x + T * 6, y: ap_logistics_y + T * 4.5 },
+  { objectId: 'ap10', roomId: 'ap_logistics', x: ap_logistics_x + T * 3, y: ap_logistics_y + T * 5 },
+  { objectId: 'ap11', roomId: 'ap_logistics', x: ap_logistics_x + T * 9, y: ap_logistics_y + T * 4.5 },
+  { objectId: 'ap12', roomId: 'ap_logistics', x: ap_logistics_x + T * 6, y: ap_logistics_y + T * 7.5 },
+
+  { objectId: 'ap13', roomId: 'ap_wearables', x: ap_wearables_x + T * 3, y: ap_wearables_y + T * 5 },
+  { objectId: 'ap14', roomId: 'ap_wearables', x: ap_wearables_x + T * 6.5, y: ap_wearables_y + T * 5 },
+  { objectId: 'ap15', roomId: 'ap_wearables', x: ap_wearables_x + T * 9.5, y: ap_wearables_y + T * 5 },
 ];
 
 // Build collision map from all rooms

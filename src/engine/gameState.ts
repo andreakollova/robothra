@@ -17,7 +17,7 @@ const _spriteIds = new Set([
 const PLAYER_SPEED = 180;
 const PLAYER_BOOST = 360;
 const PLAYER_SIZE = 24;
-const INTERACTION_DIST = 60;
+const INTERACTION_DIST = 80;
 const STEP_INTERVAL = 0.25;
 
 export type Direction = 'up' | 'down' | 'left' | 'right';
