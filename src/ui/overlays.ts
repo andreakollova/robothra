@@ -1,6 +1,6 @@
 // HTML-based UI overlays
 
-import { GameState, UIOverlay } from '../engine/gameState';
+import { GameState, UIOverlay, FlashcardDifficulty } from '../engine/gameState';
 import { OBJECTS, MODULE_NAMES, MODULE_COLORS, ModuleName, getObjectsByModule } from '../data/objects';
 import { QUESTIONS, getQuestionById } from '../data/questions';
 import { ROOMS, OBJECT_PLACEMENTS, WORLD_W, WORLD_H, TILE } from '../data/world';
@@ -46,6 +46,7 @@ export class UIManager {
       case 'pause': this.renderPause(); break;
       case 'completion': this.renderCompletion(); break;
       case 'editor': this.renderEditor(); break;
+      case 'flashcards': this.renderFlashcards(); break;
     }
   }
 
@@ -525,6 +526,7 @@ export class UIManager {
         <label style="display:flex;align-items:center;gap:8px;justify-content:center;font-size:13px;color:#627185;cursor:pointer">
           <input type="checkbox" id="sound-toggle" ${isSoundEnabled() ? 'checked' : ''}> Sound effects
         </label>
+        <button class="ui-btn secondary" id="pause-flashcards" style="background:#E3F2FD;color:#1976D2">Flashcards</button>
         <button class="ui-btn secondary" id="pause-editor">Content Editor</button>
         <button class="ui-btn danger" id="pause-reset">Reset Progress</button>
       </div>
@@ -534,6 +536,7 @@ export class UIManager {
       setSoundEnabled((e.target as HTMLInputElement).checked);
       this.state.save.settings.soundEnabled = (e.target as HTMLInputElement).checked;
     });
+    document.getElementById('pause-flashcards')?.addEventListener('click', () => { playUIClick(); this.state.openFlashcards(); this.update(); });
     document.getElementById('pause-editor')?.addEventListener('click', () => { playUIClick(); this.state.openEditor(); this.update(); });
     document.getElementById('pause-reset')?.addEventListener('click', () => { if (confirm('Reset all progress?')) { clearSave(); window.location.reload(); } });
   }
@@ -580,6 +583,246 @@ export class UIManager {
       const a = document.createElement('a');
       a.href = url; a.download = 'questions.json'; a.click();
       URL.revokeObjectURL(url);
+    });
+  }
+
+  // ======================== FLASHCARDS ========================
+  private renderFlashcards() {
+    const fc = this.state.flashcardMode;
+
+    if (!fc) {
+      // Setup screen - choose difficulty and module
+      this.renderFlashcardSetup();
+      return;
+    }
+
+    // Check if finished
+    if (fc.currentIndex >= fc.cards.length) {
+      this.renderFlashcardResults();
+      return;
+    }
+
+    const card = fc.cards[fc.currentIndex];
+    const obj = OBJECTS.find(o => o.id === card.objectId)!;
+    const color = MODULE_CIRCLE_COLORS[obj.module] || '#888';
+    const panel = this.createPanel(520);
+
+    if (fc.phase === 'question') {
+      // Show the card
+      let cardContent = '';
+      if (card.cardType === 'image' && card.hasImage) {
+        // Show image, guess the name
+        cardContent = `
+          <div style="display:flex;justify-content:center;margin-bottom:20px">
+            <div style="width:200px;height:200px;border-radius:16px;background:#F8F9FA;display:flex;align-items:center;justify-content:center;border:2px solid #DCE3E8">
+              <img src="/objects/${obj.id}.png" style="width:170px;height:170px;object-fit:contain" alt="?">
+            </div>
+          </div>
+          <div style="font-size:14px;color:#627185;text-align:center;margin-bottom:16px">What is this component?</div>
+        `;
+      } else {
+        // Show description, guess the name
+        cardContent = `
+          <div style="background:#F8F9FA;border-radius:12px;padding:20px;margin-bottom:16px;border-left:4px solid ${color}">
+            <div style="font-size:14px;color:#263445;line-height:1.6">${obj.description}</div>
+          </div>
+          <div style="font-size:14px;color:#627185;text-align:center;margin-bottom:16px">What is this describing?</div>
+        `;
+      }
+
+      let answerArea = '';
+      if (fc.difficulty === 'choose') {
+        answerArea = `<div style="display:flex;flex-direction:column;gap:8px">
+          ${fc.options.map((opt, i) => `
+            <button class="quiz-option fc-option" data-answer="${opt.replace(/"/g, '&quot;')}">${opt}</button>
+          `).join('')}
+        </div>`;
+      } else {
+        answerArea = `
+          <input type="text" id="fc-type-input" style="width:100%;box-sizing:border-box;padding:12px;border:1.5px solid #DCE3E8;border-radius:8px;font-size:16px;font-family:inherit;outline:none;text-align:center" placeholder="Type the name..." value="${fc.typedAnswer}" autocomplete="off">
+          <button class="ui-btn primary" id="fc-type-submit" style="margin-top:12px">Check Answer</button>
+        `;
+      }
+
+      panel.innerHTML = `<div style="padding:24px">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px">
+          <div style="display:flex;align-items:center;gap:4px">
+            <span style="display:inline-block;width:10px;height:10px;border-radius:50%;background:${color}"></span>
+            <span style="font-size:12px;color:#627185;font-weight:500">${obj.module}</span>
+          </div>
+          <div style="font-size:12px;color:#90A4AE">${fc.currentIndex + 1} / ${fc.total} &middot; Score: ${fc.score}</div>
+        </div>
+        ${cardContent}
+        ${answerArea}
+        <button class="ui-btn secondary" id="fc-quit" style="margin-top:12px;font-size:12px">Quit Flashcards</button>
+      </div>`;
+
+      // Event handlers
+      document.querySelectorAll('.fc-option').forEach(btn => {
+        btn.addEventListener('click', () => {
+          const answer = (btn as HTMLElement).dataset.answer!;
+          playUIClick();
+          this.state.flashcardAnswer(answer);
+          this.update();
+        });
+      });
+
+      const typeInput = document.getElementById('fc-type-input') as HTMLInputElement;
+      if (typeInput) {
+        typeInput.focus();
+        this.inputManager.setTyping(true);
+        typeInput.addEventListener('input', () => { fc.typedAnswer = typeInput.value; });
+        typeInput.addEventListener('focus', () => this.inputManager.setTyping(true));
+        typeInput.addEventListener('blur', () => this.inputManager.setTyping(false));
+        typeInput.addEventListener('keydown', (e) => {
+          if (e.key === 'Enter') {
+            e.preventDefault();
+            fc.typedAnswer = typeInput.value;
+            this.inputManager.setTyping(false);
+            this.state.flashcardAnswer(fc.typedAnswer);
+            this.update();
+          }
+        });
+      }
+      document.getElementById('fc-type-submit')?.addEventListener('click', () => {
+        if (typeInput) fc.typedAnswer = typeInput.value;
+        this.inputManager.setTyping(false);
+        playUIClick();
+        this.state.flashcardAnswer(fc.typedAnswer);
+        this.update();
+      });
+      document.getElementById('fc-quit')?.addEventListener('click', () => {
+        this.inputManager.setTyping(false);
+        playUIClick();
+        this.state.flashcardMode = null;
+        this.state.overlay = 'pause';
+        this.update();
+      });
+
+    } else {
+      // Show correct/incorrect feedback
+      const isCorrect = fc.phase === 'correct';
+      if (isCorrect) playCorrect(); else playIncorrect();
+
+      panel.innerHTML = `<div style="padding:24px;text-align:center">
+        <div style="width:48px;height:48px;border-radius:50%;background:${isCorrect ? '#E8F5E9' : '#FFEBEE'};display:inline-flex;align-items:center;justify-content:center;font-size:24px;margin-bottom:12px">
+          ${isCorrect ? '<span style="color:#4CAF50">&#10003;</span>' : '<span style="color:#F44336">&#10007;</span>'}
+        </div>
+        <h3 style="font-size:16px;font-weight:600;color:${isCorrect ? '#2E7D32' : '#C62828'};margin:0 0 8px">${isCorrect ? 'Correct!' : 'Not quite'}</h3>
+        <div style="display:flex;justify-content:center;margin-bottom:12px">
+          ${card.hasImage ? `<img src="/objects/${obj.id}.png" style="width:80px;height:80px;object-fit:contain" alt="">` : ''}
+        </div>
+        <div style="font-size:16px;font-weight:700;color:#263445;margin-bottom:4px">${obj.name}</div>
+        <div style="font-size:13px;color:#627185;margin-bottom:20px;line-height:1.5">${obj.description}</div>
+        <button class="ui-btn primary" id="fc-next">${fc.currentIndex + 1 >= fc.total ? 'See Results' : 'Next Card'}</button>
+      </div>`;
+
+      document.getElementById('fc-next')?.addEventListener('click', () => {
+        playUIClick();
+        this.state.flashcardNext();
+        this.update();
+      });
+    }
+  }
+
+  private renderFlashcardSetup() {
+    const panel = this.createPanel(440);
+    panel.innerHTML = `<div style="padding:24px">
+      <h2 style="font-size:18px;font-weight:700;color:#263445;margin:0 0 4px">Flashcards</h2>
+      <p style="font-size:13px;color:#627185;margin:0 0 20px">Test your knowledge of robotics components and concepts.</p>
+
+      <div style="font-size:13px;font-weight:600;color:#263445;margin-bottom:8px">Difficulty</div>
+      <div style="display:flex;gap:8px;margin-bottom:20px">
+        <button class="quiz-option fc-diff selected" data-diff="choose" style="flex:1;justify-content:center">
+          <span>Choose from options</span>
+        </button>
+        <button class="quiz-option fc-diff" data-diff="type" style="flex:1;justify-content:center">
+          <span>Type the answer</span>
+        </button>
+      </div>
+
+      <div style="font-size:13px;font-weight:600;color:#263445;margin-bottom:8px">Module</div>
+      <div style="display:flex;flex-direction:column;gap:6px;margin-bottom:20px">
+        <button class="quiz-option fc-mod selected" data-mod="all">All modules (75 cards)</button>
+        ${MODULE_NAMES.map(m => {
+          const c = MODULE_CIRCLE_COLORS[m];
+          const count = OBJECTS.filter(o => o.module === m).length;
+          return `<button class="quiz-option fc-mod" data-mod="${m}">
+            <span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:${c};margin-right:6px"></span>
+            ${m} (${count})
+          </button>`;
+        }).join('')}
+      </div>
+
+      <div style="display:flex;gap:8px">
+        <button class="ui-btn primary" id="fc-start">Start</button>
+        <button class="ui-btn secondary" id="fc-back">Back</button>
+      </div>
+    </div>`;
+
+    let selectedDiff: FlashcardDifficulty = 'choose';
+    let selectedMod: string = 'all';
+
+    document.querySelectorAll('.fc-diff').forEach(btn => {
+      btn.addEventListener('click', () => {
+        document.querySelectorAll('.fc-diff').forEach(b => b.classList.remove('selected'));
+        btn.classList.add('selected');
+        selectedDiff = (btn as HTMLElement).dataset.diff as FlashcardDifficulty;
+        playUIClick();
+      });
+    });
+
+    document.querySelectorAll('.fc-mod').forEach(btn => {
+      btn.addEventListener('click', () => {
+        document.querySelectorAll('.fc-mod').forEach(b => b.classList.remove('selected'));
+        btn.classList.add('selected');
+        selectedMod = (btn as HTMLElement).dataset.mod!;
+        playUIClick();
+      });
+    });
+
+    document.getElementById('fc-start')?.addEventListener('click', () => {
+      playUIClick();
+      const mod = selectedMod === 'all' ? null : selectedMod as ModuleName;
+      this.state.startFlashcards(selectedDiff, mod);
+      this.update();
+    });
+
+    document.getElementById('fc-back')?.addEventListener('click', () => {
+      playUIClick();
+      this.state.overlay = 'pause';
+      this.state.playTimeActive = false;
+      this.update();
+    });
+  }
+
+  private renderFlashcardResults() {
+    const fc = this.state.flashcardMode!;
+    const pct = Math.round((fc.score / fc.total) * 100);
+    const panel = this.createPanel(400);
+    panel.innerHTML = `<div style="padding:32px;text-align:center">
+      <div style="font-size:48px;margin-bottom:12px">${pct >= 80 ? '&#9733;' : pct >= 50 ? '&#9733;' : '&#9734;'}</div>
+      <h2 style="font-size:20px;font-weight:700;color:#263445;margin:0 0 8px">Flashcards Complete</h2>
+      <div style="font-size:32px;font-weight:700;color:#3564D8;margin-bottom:4px">${fc.score} / ${fc.total}</div>
+      <div style="font-size:14px;color:#627185;margin-bottom:20px">${pct}% correct</div>
+      <div style="display:flex;flex-direction:column;gap:8px">
+        <button class="ui-btn primary" id="fc-retry">Play Again</button>
+        <button class="ui-btn secondary" id="fc-done">Back to Game</button>
+      </div>
+    </div>`;
+
+    document.getElementById('fc-retry')?.addEventListener('click', () => {
+      playUIClick();
+      this.state.flashcardMode = null;
+      this.state.openFlashcards();
+      this.update();
+    });
+    document.getElementById('fc-done')?.addEventListener('click', () => {
+      playUIClick();
+      this.state.flashcardMode = null;
+      this.state.closeOverlay();
+      this.state.playTimeActive = true;
+      this.update();
     });
   }
 

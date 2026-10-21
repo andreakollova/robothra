@@ -7,6 +7,13 @@ import { resolveCollision, distanceBetween } from './collision';
 import { SaveData, loadGame, saveGame, QuizAttempt } from './save';
 import { playStep, playDiscovery } from './sound';
 
+// IDs of objects that have PNG sprites
+const _spriteIds = new Set([
+  'ir01','ir02','ir03','ir04','ir05','ir06','ir07','ir08','ir09','ir10',
+  'ir11','ir12','ir13','ir14','ir15',
+  'rb01','rb02','rb03','rb04','rb05','rb06','rb07','rb09','rb10','rb11','rb12',
+]);
+
 const PLAYER_SPEED = 180;
 const PLAYER_BOOST = 360;
 const PLAYER_SIZE = 24;
@@ -15,7 +22,7 @@ const STEP_INTERVAL = 0.25;
 
 export type Direction = 'up' | 'down' | 'left' | 'right';
 
-export type UIOverlay = 'none' | 'inspect' | 'question' | 'feedback' | 'open_ended' | 'open_feedback' | 'challenge_result' | 'map' | 'journal' | 'pause' | 'completion' | 'editor' | 'hint';
+export type UIOverlay = 'none' | 'inspect' | 'question' | 'feedback' | 'open_ended' | 'open_feedback' | 'challenge_result' | 'map' | 'journal' | 'pause' | 'completion' | 'editor' | 'hint' | 'flashcards';
 
 export interface PlayerState {
   x: number;
@@ -35,6 +42,28 @@ export interface ChallengeState {
   selfApproved: boolean | null; // for open-ended
 }
 
+export type FlashcardDifficulty = 'choose' | 'type';
+export type FlashcardCardType = 'image' | 'concept';
+
+export interface FlashcardCard {
+  objectId: string;
+  cardType: FlashcardCardType; // image = show PNG guess name, concept = show description guess name
+  hasImage: boolean;
+}
+
+export interface FlashcardState {
+  difficulty: FlashcardDifficulty;
+  module: ModuleName | null; // null = all modules
+  cards: FlashcardCard[];
+  currentIndex: number;
+  options: string[]; // 4 option names for 'choose' mode
+  correctName: string;
+  typedAnswer: string;
+  phase: 'question' | 'correct' | 'incorrect';
+  score: number;
+  total: number;
+}
+
 export class GameState {
   player: PlayerState;
   walls: Wall[];
@@ -51,6 +80,7 @@ export class GameState {
   practiceMode = false;
   practiceQueue: string[] = [];
   practiceIndex = 0;
+  flashcardMode: FlashcardState | null = null;
 
   constructor() {
     this.save = loadGame();
@@ -454,6 +484,92 @@ export class GameState {
     if (this.save.discoveredObjects.length >= 75) {
       this.overlay = 'completion';
     }
+  }
+
+  // ======================== FLASHCARDS ========================
+
+  openFlashcards() {
+    this.overlay = 'flashcards';
+    this.flashcardMode = null; // show setup screen
+    this.playTimeActive = false;
+  }
+
+  startFlashcards(difficulty: FlashcardDifficulty, module: ModuleName | null) {
+    const allObjects = module ? OBJECTS.filter(o => o.module === module) : [...OBJECTS];
+    // Shuffle
+    const shuffled = allObjects.sort(() => Math.random() - 0.5);
+
+    const cards: FlashcardCard[] = shuffled.map(obj => {
+      // Check if object has a loaded sprite
+      const hasImage = !!this._checkSprite(obj.id);
+      return {
+        objectId: obj.id,
+        cardType: hasImage ? 'image' : 'concept',
+        hasImage,
+      };
+    });
+
+    if (cards.length === 0) return;
+
+    const firstCard = cards[0];
+    const firstObj = OBJECTS.find(o => o.id === firstCard.objectId)!;
+    const options = this._generateOptions(firstObj, allObjects);
+
+    this.flashcardMode = {
+      difficulty,
+      module,
+      cards,
+      currentIndex: 0,
+      options,
+      correctName: firstObj.name,
+      typedAnswer: '',
+      phase: 'question',
+      score: 0,
+      total: cards.length,
+    };
+    this.overlay = 'flashcards';
+  }
+
+  flashcardAnswer(answer: string) {
+    if (!this.flashcardMode || this.flashcardMode.phase !== 'question') return;
+    const correct = answer.toLowerCase().trim() === this.flashcardMode.correctName.toLowerCase().trim();
+    this.flashcardMode.phase = correct ? 'correct' : 'incorrect';
+    if (correct) this.flashcardMode.score++;
+  }
+
+  flashcardNext() {
+    if (!this.flashcardMode) return;
+    this.flashcardMode.currentIndex++;
+    if (this.flashcardMode.currentIndex >= this.flashcardMode.cards.length) {
+      // Finished - stay on flashcards overlay to show final score
+      this.flashcardMode.phase = 'question'; // reuse for final screen
+      return;
+    }
+    const card = this.flashcardMode.cards[this.flashcardMode.currentIndex];
+    const obj = OBJECTS.find(o => o.id === card.objectId)!;
+    const pool = this.flashcardMode.module
+      ? OBJECTS.filter(o => o.module === this.flashcardMode!.module)
+      : [...OBJECTS];
+    this.flashcardMode.options = this._generateOptions(obj, pool);
+    this.flashcardMode.correctName = obj.name;
+    this.flashcardMode.typedAnswer = '';
+    this.flashcardMode.phase = 'question';
+  }
+
+  private _generateOptions(correct: typeof OBJECTS[0], pool: typeof OBJECTS): string[] {
+    const others = pool.filter(o => o.id !== correct.id).sort(() => Math.random() - 0.5).slice(0, 3);
+    const options = [correct.name, ...others.map(o => o.name)];
+    return options.sort(() => Math.random() - 0.5);
+  }
+
+  // Simple sprite check - access the cache from renderer
+  private _checkSprite(objectId: string): boolean {
+    // Check if the image element exists in DOM cache
+    const img = new Image();
+    img.src = `/objects/${objectId}.png`;
+    // We can't synchronously check, so we rely on the preload
+    // Use a simple heuristic: check if file was in our asset list
+    return _spriteIds.has(objectId);
   }
 
   getPlayTimeFormatted(): string {

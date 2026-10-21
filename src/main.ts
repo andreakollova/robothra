@@ -75,7 +75,9 @@ function gameLoop(now: number) {
     } else if (state.overlay === 'inspect' || state.overlay === 'question' || state.overlay === 'open_ended') {
       input.setTyping(false);
       state.skipChallenge();
-    } else if (state.overlay === 'editor') {
+    } else if (state.overlay === 'editor' || state.overlay === 'flashcards') {
+      input.setTyping(false);
+      state.flashcardMode = null;
       state.overlay = 'pause';
       state.playTimeActive = false;
     } else {
