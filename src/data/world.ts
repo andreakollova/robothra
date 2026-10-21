@@ -690,38 +690,41 @@ export const ROOMS: RoomDef[] = [
 // ========================
 // OBJECT PLACEMENTS - all 75 objects
 // ========================
-// All objects placed in walkable areas (avoiding furniture collision boxes)
-// Each room is RW x RH (12T x 9T). Walls are 12px thick at edges.
-// Furniture is typically at y: T*0.5-T*3.5 (top) and y: T*5-T*7.5 (bottom).
-// Safe walkable band is roughly y: T*4 center, plus edges T*7.5+ and scattered gaps.
+// Objects placed ON furniture (benches, displays, stands) for exhibition feel.
+// Player approaches from walkable areas and interacts at distance.
 export const OBJECT_PLACEMENTS: ObjectPlacement[] = [
   // ====== Zone 1: What is Robotics? (15 objects) ======
-  { objectId: 'wr01', roomId: 'wr_reception', x: wr_reception_x + T * 7, y: wr_reception_y + T * 4.5 },
-  { objectId: 'wr02', roomId: 'wr_reception', x: wr_reception_x + T * 9, y: wr_reception_y + T * 4.5 },
-  { objectId: 'wr08', roomId: 'wr_reception', x: wr_reception_x + T * 5, y: wr_reception_y + T * 6.5 },
+  // Reception: desk at T*2,T*2; bench at T*7,T*1.5
+  { objectId: 'wr01', roomId: 'wr_reception', x: wr_reception_x + T * 3.5, y: wr_reception_y + T * 2.5 }, // on desk
+  { objectId: 'wr02', roomId: 'wr_reception', x: wr_reception_x + T * 8.5, y: wr_reception_y + T * 2 },   // on bench
+  { objectId: 'wr08', roomId: 'wr_reception', x: wr_reception_x + T * 5, y: wr_reception_y + T * 6 },
 
-  { objectId: 'wr05', roomId: 'wr_exhibition', x: wr_exhibition_x + T * 5, y: wr_exhibition_y + T * 4.5 },
-  { objectId: 'wr06', roomId: 'wr_exhibition', x: wr_exhibition_x + T * 9, y: wr_exhibition_y + T * 4.5 },
-  { objectId: 'wr07', roomId: 'wr_exhibition', x: wr_exhibition_x + T * 2, y: wr_exhibition_y + T * 4.5 },
-  { objectId: 'wr14', roomId: 'wr_exhibition', x: wr_exhibition_x + T * 7, y: wr_exhibition_y + T * 4.5 },
+  // Exhibition: display cases at T*2,T*2 and T*6,T*2 and T*2,T*5.5 and T*6,T*5.5
+  { objectId: 'wr05', roomId: 'wr_exhibition', x: wr_exhibition_x + T * 3, y: wr_exhibition_y + T * 3 },   // on case 1
+  { objectId: 'wr06', roomId: 'wr_exhibition', x: wr_exhibition_x + T * 7, y: wr_exhibition_y + T * 3 },   // on case 2
+  { objectId: 'wr07', roomId: 'wr_exhibition', x: wr_exhibition_x + T * 3, y: wr_exhibition_y + T * 6.5 }, // on case 3
+  { objectId: 'wr14', roomId: 'wr_exhibition', x: wr_exhibition_x + T * 7, y: wr_exhibition_y + T * 6.5 }, // on case 4
 
-  { objectId: 'wr09', roomId: 'wr_history', x: wr_history_x + T * 6, y: wr_history_y + T * 3 },
-  { objectId: 'wr10', roomId: 'wr_history', x: wr_history_x + T * 3, y: wr_history_y + T * 6 },
-  { objectId: 'wr11', roomId: 'wr_history', x: wr_history_x + T * 7, y: wr_history_y + T * 6 },
-  { objectId: 'wr15', roomId: 'wr_history', x: wr_history_x + T * 9.5, y: wr_history_y + T * 3 },
+  // History: desk at T*2,T*2; bookshelf at T*1,T*0.5; cabinet at T*7,T*0.5
+  { objectId: 'wr09', roomId: 'wr_history', x: wr_history_x + T * 2.5, y: wr_history_y + T * 1 },  // on bookshelf
+  { objectId: 'wr10', roomId: 'wr_history', x: wr_history_x + T * 3, y: wr_history_y + T * 2.5 },  // on desk
+  { objectId: 'wr11', roomId: 'wr_history', x: wr_history_x + T * 8, y: wr_history_y + T * 1 },    // on cabinet
+  { objectId: 'wr15', roomId: 'wr_history', x: wr_history_x + T * 6, y: wr_history_y + T * 5 },
 
-  { objectId: 'wr03', roomId: 'wr_demolab', x: wr_demolab_x + T * 8, y: wr_demolab_y + T * 4.5 },
-  { objectId: 'wr04', roomId: 'wr_demolab', x: wr_demolab_x + T * 5, y: wr_demolab_y + T * 4.5 },
-  { objectId: 'wr12', roomId: 'wr_demolab', x: wr_demolab_x + T * 2, y: wr_demolab_y + T * 4.5 },
-  { objectId: 'wr13', roomId: 'wr_demolab', x: wr_demolab_x + T * 10, y: wr_demolab_y + T * 4.5 },
+  // Demo Lab: benches at T*2,T*2 and T*7,T*2; machine at T*2,T*6
+  { objectId: 'wr03', roomId: 'wr_demolab', x: wr_demolab_x + T * 4, y: wr_demolab_y + T * 2.5 },  // on bench 1
+  { objectId: 'wr04', roomId: 'wr_demolab', x: wr_demolab_x + T * 8.5, y: wr_demolab_y + T * 2.5 },// on bench 2
+  { objectId: 'wr12', roomId: 'wr_demolab', x: wr_demolab_x + T * 3, y: wr_demolab_y + T * 6.5 },  // on machine
+  { objectId: 'wr13', roomId: 'wr_demolab', x: wr_demolab_x + T * 7, y: wr_demolab_y + T * 5 },
 
   // ====== Zone 2: Robots (15 objects) ======
-  { objectId: 'rb01', roomId: 'rb_workshop', x: rb_workshop_x + T * 3, y: rb_workshop_y + T * 4 },
-  { objectId: 'rb02', roomId: 'rb_workshop', x: rb_workshop_x + T * 8, y: rb_workshop_y + T * 4 },
-  { objectId: 'rb10', roomId: 'rb_workshop', x: rb_workshop_x + T * 7, y: rb_workshop_y + T * 7.5 },
-  { objectId: 'rb11', roomId: 'rb_workshop', x: rb_workshop_x + T * 10, y: rb_workshop_y + T * 7.5 },
+  // Workshop: benches at T*2,T*1.5 and T*7,T*1.5; machine at T*2,T*5
+  { objectId: 'rb01', roomId: 'rb_workshop', x: rb_workshop_x + T * 4, y: rb_workshop_y + T * 2 },   // on bench 1
+  { objectId: 'rb02', roomId: 'rb_workshop', x: rb_workshop_x + T * 8.5, y: rb_workshop_y + T * 2 }, // on bench 2
+  { objectId: 'rb10', roomId: 'rb_workshop', x: rb_workshop_x + T * 3.5, y: rb_workshop_y + T * 6 }, // on machine
+  { objectId: 'rb11', roomId: 'rb_workshop', x: rb_workshop_x + T * 8, y: rb_workshop_y + T * 5 },
 
-  // Objects ON the display pedestals (pedestals at y T*1.5 and T*5, each T*2 wide/tall)
+  // Display: pedestals at T*1.5,T*1.5 / T*5,T*1.5 / T*8.5,T*1.5 / T*1.5,T*5 / T*5,T*5 / T*8.5,T*5
   { objectId: 'rb03', roomId: 'rb_display', x: rb_display_x + T * 2.5, y: rb_display_y + T * 2.5 },
   { objectId: 'rb04', roomId: 'rb_display', x: rb_display_x + T * 6, y: rb_display_y + T * 2.5 },
   { objectId: 'rb05', roomId: 'rb_display', x: rb_display_x + T * 9.5, y: rb_display_y + T * 2.5 },
@@ -729,72 +732,86 @@ export const OBJECT_PLACEMENTS: ObjectPlacement[] = [
   { objectId: 'rb07', roomId: 'rb_display', x: rb_display_x + T * 6, y: rb_display_y + T * 6 },
   { objectId: 'rb08', roomId: 'rb_display', x: rb_display_x + T * 9.5, y: rb_display_y + T * 6 },
 
-  { objectId: 'rb09', roomId: 'rb_calibration', x: rb_calibration_x + T * 3, y: rb_calibration_y + T * 5 },
-  { objectId: 'rb12', roomId: 'rb_calibration', x: rb_calibration_x + T * 7, y: rb_calibration_y + T * 5 },
+  // Calibration: bench at T*2,T*2 (w3T,h2T); rack at T*7,T*0.5
+  { objectId: 'rb09', roomId: 'rb_calibration', x: rb_calibration_x + T * 3.5, y: rb_calibration_y + T * 3 }, // on bench
+  { objectId: 'rb12', roomId: 'rb_calibration', x: rb_calibration_x + T * 8.5, y: rb_calibration_y + T * 1 }, // on rack
   { objectId: 'rb13', roomId: 'rb_calibration', x: rb_calibration_x + T * 5, y: rb_calibration_y + T * 5 },
 
-  { objectId: 'rb14', roomId: 'rb_office', x: rb_office_x + T * 6, y: rb_office_y + T * 4.5 },
-  { objectId: 'rb15', roomId: 'rb_office', x: rb_office_x + T * 9, y: rb_office_y + T * 4.5 },
+  // Office: desks at T*2,T*2 and T*7,T*2
+  { objectId: 'rb14', roomId: 'rb_office', x: rb_office_x + T * 3.5, y: rb_office_y + T * 2.5 },  // on desk 1
+  { objectId: 'rb15', roomId: 'rb_office', x: rb_office_x + T * 8.5, y: rb_office_y + T * 2.5 },  // on desk 2
 
   // ====== Zone 3: Industrial Robots (15 objects) ======
-  { objectId: 'ir14', roomId: 'ir_production', x: ir_production_x + T * 6, y: ir_production_y + T * 5 },
-  { objectId: 'ir15', roomId: 'ir_production', x: ir_production_x + T * 3, y: ir_production_y + T * 5 },
+  // Production: cells at T*2,T*1.5 and T*7,T*1.5; conveyor at T*2,T*6
+  { objectId: 'ir14', roomId: 'ir_production', x: ir_production_x + T * 3.5, y: ir_production_y + T * 2.5 }, // on cell 1
+  { objectId: 'ir15', roomId: 'ir_production', x: ir_production_x + T * 8.5, y: ir_production_y + T * 2.5 }, // on cell 2
 
-  { objectId: 'ir01', roomId: 'ir_motors', x: ir_motors_x + T * 2, y: ir_motors_y + T * 4 },
-  { objectId: 'ir02', roomId: 'ir_motors', x: ir_motors_x + T * 5, y: ir_motors_y + T * 4 },
-  { objectId: 'ir03', roomId: 'ir_motors', x: ir_motors_x + T * 8, y: ir_motors_y + T * 4 },
-  { objectId: 'ir04', roomId: 'ir_motors', x: ir_motors_x + T * 10, y: ir_motors_y + T * 4 },
-  { objectId: 'ir05', roomId: 'ir_motors', x: ir_motors_x + T * 6, y: ir_motors_y + T * 7.5 },
+  // Motors: benches at T*2,T*1.5 (w3T,h2T) and T*7,T*1.5 (w3T,h2T); rig at T*3,T*5
+  { objectId: 'ir01', roomId: 'ir_motors', x: ir_motors_x + T * 3, y: ir_motors_y + T * 2.5 },   // on bench 1
+  { objectId: 'ir02', roomId: 'ir_motors', x: ir_motors_x + T * 8, y: ir_motors_y + T * 2.5 },   // on bench 2
+  { objectId: 'ir03', roomId: 'ir_motors', x: ir_motors_x + T * 4.5, y: ir_motors_y + T * 5.5 }, // on rig
+  { objectId: 'ir04', roomId: 'ir_motors', x: ir_motors_x + T * 7, y: ir_motors_y + T * 5.5 },   // on rig
+  { objectId: 'ir05', roomId: 'ir_motors', x: ir_motors_x + T * 5.5, y: ir_motors_y + T * 2.5 }, // between benches
 
-  { objectId: 'ir06', roomId: 'ir_sensors', x: ir_sensors_x + T * 2, y: ir_sensors_y + T * 4.5 },
-  { objectId: 'ir07', roomId: 'ir_sensors', x: ir_sensors_x + T * 5, y: ir_sensors_y + T * 4.5 },
-  { objectId: 'ir08', roomId: 'ir_sensors', x: ir_sensors_x + T * 8, y: ir_sensors_y + T * 4.5 },
-  { objectId: 'ir09', roomId: 'ir_sensors', x: ir_sensors_x + T * 3, y: ir_sensors_y + T * 5.5 },
-  { objectId: 'ir10', roomId: 'ir_sensors', x: ir_sensors_x + T * 9, y: ir_sensors_y + T * 5.5 },
+  // Sensors: benches at T*2,T*2 (w4T,h1.5T) and T*7,T*2 (w3T,h1.5T)
+  { objectId: 'ir06', roomId: 'ir_sensors', x: ir_sensors_x + T * 3, y: ir_sensors_y + T * 2.5 },   // on bench 1
+  { objectId: 'ir07', roomId: 'ir_sensors', x: ir_sensors_x + T * 5, y: ir_sensors_y + T * 2.5 },   // on bench 1
+  { objectId: 'ir08', roomId: 'ir_sensors', x: ir_sensors_x + T * 8, y: ir_sensors_y + T * 2.5 },   // on bench 2
+  { objectId: 'ir09', roomId: 'ir_sensors', x: ir_sensors_x + T * 9.5, y: ir_sensors_y + T * 2.5 }, // on bench 2
+  { objectId: 'ir10', roomId: 'ir_sensors', x: ir_sensors_x + T * 6, y: ir_sensors_y + T * 6.5 },   // near target
 
-  { objectId: 'ir11', roomId: 'ir_grippers', x: ir_grippers_x + T * 3, y: ir_grippers_y + T * 5 },
-  { objectId: 'ir12', roomId: 'ir_grippers', x: ir_grippers_x + T * 6, y: ir_grippers_y + T * 5 },
-  { objectId: 'ir13', roomId: 'ir_grippers', x: ir_grippers_x + T * 9, y: ir_grippers_y + T * 5 },
+  // Grippers: stands at T*2,T*2 / T*5,T*2 / T*8,T*2
+  { objectId: 'ir11', roomId: 'ir_grippers', x: ir_grippers_x + T * 3, y: ir_grippers_y + T * 3 },  // on stand 1
+  { objectId: 'ir12', roomId: 'ir_grippers', x: ir_grippers_x + T * 6, y: ir_grippers_y + T * 3 },  // on stand 2
+  { objectId: 'ir13', roomId: 'ir_grippers', x: ir_grippers_x + T * 9, y: ir_grippers_y + T * 3 },  // on stand 3
 
   // ====== Zone 4: Mobile Robots (15 objects) ======
-  { objectId: 'mr01', roomId: 'mr_garage', x: mr_garage_x + T * 3, y: mr_garage_y + T * 4 },
-  { objectId: 'mr02', roomId: 'mr_garage', x: mr_garage_x + T * 8, y: mr_garage_y + T * 4 },
-  { objectId: 'mr03', roomId: 'mr_garage', x: mr_garage_x + T * 6, y: mr_garage_y + T * 7.5 },
+  // Garage: bench at T*2,T*1 (w4T,h1.5T); rack at T*8,T*1; platform at T*3,T*5
+  { objectId: 'mr01', roomId: 'mr_garage', x: mr_garage_x + T * 3.5, y: mr_garage_y + T * 1.5 }, // on bench
+  { objectId: 'mr02', roomId: 'mr_garage', x: mr_garage_x + T * 4.5, y: mr_garage_y + T * 6 },   // on platform
+  { objectId: 'mr03', roomId: 'mr_garage', x: mr_garage_x + T * 9, y: mr_garage_y + T * 1.5 },   // on rack
 
-  { objectId: 'mr04', roomId: 'mr_charging', x: mr_charging_x + T * 5.5, y: mr_charging_y + T * 5 },
-  { objectId: 'mr05', roomId: 'mr_charging', x: mr_charging_x + T * 5.5, y: mr_charging_y + T * 7.5 },
+  // Charging: stations at T*2,T*2 and T*7,T*2; rack at T*3,T*6
+  { objectId: 'mr04', roomId: 'mr_charging', x: mr_charging_x + T * 3.5, y: mr_charging_y + T * 3 }, // on station 1
+  { objectId: 'mr05', roomId: 'mr_charging', x: mr_charging_x + T * 8.5, y: mr_charging_y + T * 3 }, // on station 2
 
-  { objectId: 'mr06', roomId: 'mr_sensor_workshop', x: mr_sensor_x + T * 2, y: mr_sensor_y + T * 4.5 },
-  { objectId: 'mr07', roomId: 'mr_sensor_workshop', x: mr_sensor_x + T * 5, y: mr_sensor_y + T * 4.5 },
-  { objectId: 'mr08', roomId: 'mr_sensor_workshop', x: mr_sensor_x + T * 8, y: mr_sensor_y + T * 4.5 },
-  { objectId: 'mr09', roomId: 'mr_sensor_workshop', x: mr_sensor_x + T * 2, y: mr_sensor_y + T * 7.5 },
-  { objectId: 'mr11', roomId: 'mr_sensor_workshop', x: mr_sensor_x + T * 5, y: mr_sensor_y + T * 7.5 },
-  { objectId: 'mr12', roomId: 'mr_sensor_workshop', x: mr_sensor_x + T * 8, y: mr_sensor_y + T * 7.5 },
+  // Sensor Workshop: benches at T*2,T*2 (w4T,h1.5T) and T*7,T*2 (w3T,h1.5T)
+  { objectId: 'mr06', roomId: 'mr_sensor_workshop', x: mr_sensor_x + T * 3, y: mr_sensor_y + T * 2.5 },
+  { objectId: 'mr07', roomId: 'mr_sensor_workshop', x: mr_sensor_x + T * 5, y: mr_sensor_y + T * 2.5 },
+  { objectId: 'mr08', roomId: 'mr_sensor_workshop', x: mr_sensor_x + T * 8, y: mr_sensor_y + T * 2.5 },
+  { objectId: 'mr09', roomId: 'mr_sensor_workshop', x: mr_sensor_x + T * 9.5, y: mr_sensor_y + T * 2.5 },
+  { objectId: 'mr11', roomId: 'mr_sensor_workshop', x: mr_sensor_x + T * 3, y: mr_sensor_y + T * 6.5 },  // near scope
+  { objectId: 'mr12', roomId: 'mr_sensor_workshop', x: mr_sensor_x + T * 7, y: mr_sensor_y + T * 5 },
 
-  { objectId: 'mr10', roomId: 'mr_courtyard', x: mr_courtyard_x + T * 4, y: mr_courtyard_y + T * 4.5 },
-  { objectId: 'mr13', roomId: 'mr_courtyard', x: mr_courtyard_x + T * 4, y: mr_courtyard_y + T * 7 },
-  { objectId: 'mr14', roomId: 'mr_courtyard', x: mr_courtyard_x + T * 8, y: mr_courtyard_y + T * 7 },
-  { objectId: 'mr15', roomId: 'mr_courtyard', x: mr_courtyard_x + T * 8, y: mr_courtyard_y + T * 4.5 },
+  // Courtyard: bench at T*2,T*2; planters at T*2,T*6 and T*9,T*1
+  { objectId: 'mr10', roomId: 'mr_courtyard', x: mr_courtyard_x + T * 3.5, y: mr_courtyard_y + T * 2.5 }, // on bench
+  { objectId: 'mr13', roomId: 'mr_courtyard', x: mr_courtyard_x + T * 7, y: mr_courtyard_y + T * 5 },
+  { objectId: 'mr14', roomId: 'mr_courtyard', x: mr_courtyard_x + T * 4, y: mr_courtyard_y + T * 7 },
+  { objectId: 'mr15', roomId: 'mr_courtyard', x: mr_courtyard_x + T * 9, y: mr_courtyard_y + T * 5 },
 
   // ====== Zone 5: Applications (15 objects) ======
-  { objectId: 'ap01', roomId: 'ap_industrial', x: ap_industrial_x + T * 3, y: ap_industrial_y + T * 5 },
-  { objectId: 'ap02', roomId: 'ap_industrial', x: ap_industrial_x + T * 8, y: ap_industrial_y + T * 5 },
+  // Industrial: welding cell T*2,T*2; paint booth T*7,T*2
+  { objectId: 'ap01', roomId: 'ap_industrial', x: ap_industrial_x + T * 3.5, y: ap_industrial_y + T * 3 }, // on weld cell
+  { objectId: 'ap02', roomId: 'ap_industrial', x: ap_industrial_x + T * 8.5, y: ap_industrial_y + T * 3 }, // on paint booth
 
-  { objectId: 'ap03', roomId: 'ap_healthcare', x: ap_healthcare_x + T * 2, y: ap_healthcare_y + T * 4.5 },
-  { objectId: 'ap04', roomId: 'ap_healthcare', x: ap_healthcare_x + T * 5, y: ap_healthcare_y + T * 4.5 },
-  { objectId: 'ap05', roomId: 'ap_healthcare', x: ap_healthcare_x + T * 8, y: ap_healthcare_y + T * 4.5 },
-  { objectId: 'ap06', roomId: 'ap_healthcare', x: ap_healthcare_x + T * 2, y: ap_healthcare_y + T * 7.5 },
-  { objectId: 'ap07', roomId: 'ap_healthcare', x: ap_healthcare_x + T * 6, y: ap_healthcare_y + T * 7.5 },
-  { objectId: 'ap08', roomId: 'ap_healthcare', x: ap_healthcare_x + T * 10, y: ap_healthcare_y + T * 7.5 },
+  // Healthcare: medical table T*2,T*1.5; cabinet T*6,T*1; greenhouse T*2,T*5; terrain T*7,T*5
+  { objectId: 'ap03', roomId: 'ap_healthcare', x: ap_healthcare_x + T * 3.5, y: ap_healthcare_y + T * 2.5 }, // on table
+  { objectId: 'ap04', roomId: 'ap_healthcare', x: ap_healthcare_x + T * 7, y: ap_healthcare_y + T * 1.5 },   // on cabinet
+  { objectId: 'ap05', roomId: 'ap_healthcare', x: ap_healthcare_x + T * 3.5, y: ap_healthcare_y + T * 6 },   // on greenhouse
+  { objectId: 'ap06', roomId: 'ap_healthcare', x: ap_healthcare_x + T * 5.5, y: ap_healthcare_y + T * 6 },
+  { objectId: 'ap07', roomId: 'ap_healthcare', x: ap_healthcare_x + T * 8.5, y: ap_healthcare_y + T * 6 },   // on terrain
+  { objectId: 'ap08', roomId: 'ap_healthcare', x: ap_healthcare_x + T * 10, y: ap_healthcare_y + T * 6 },
 
-  { objectId: 'ap09', roomId: 'ap_logistics', x: ap_logistics_x + T * 6, y: ap_logistics_y + T * 4.5 },
-  { objectId: 'ap10', roomId: 'ap_logistics', x: ap_logistics_x + T * 3, y: ap_logistics_y + T * 5 },
-  { objectId: 'ap11', roomId: 'ap_logistics', x: ap_logistics_x + T * 9, y: ap_logistics_y + T * 4.5 },
-  { objectId: 'ap12', roomId: 'ap_logistics', x: ap_logistics_x + T * 6, y: ap_logistics_y + T * 7.5 },
+  // Logistics: pallet at T*2,T*2; conveyor at T*2,T*6; construction at T*7,T*2
+  { objectId: 'ap09', roomId: 'ap_logistics', x: ap_logistics_x + T * 3.5, y: ap_logistics_y + T * 3 },  // on pallet
+  { objectId: 'ap10', roomId: 'ap_logistics', x: ap_logistics_x + T * 6, y: ap_logistics_y + T * 6.5 },  // on conveyor
+  { objectId: 'ap11', roomId: 'ap_logistics', x: ap_logistics_x + T * 8.5, y: ap_logistics_y + T * 3 },  // on construction
+  { objectId: 'ap12', roomId: 'ap_logistics', x: ap_logistics_x + T * 9, y: ap_logistics_y + T * 6.5 },
 
-  { objectId: 'ap13', roomId: 'ap_wearables', x: ap_wearables_x + T * 3, y: ap_wearables_y + T * 5 },
-  { objectId: 'ap14', roomId: 'ap_wearables', x: ap_wearables_x + T * 6.5, y: ap_wearables_y + T * 5 },
-  { objectId: 'ap15', roomId: 'ap_wearables', x: ap_wearables_x + T * 9.5, y: ap_wearables_y + T * 5 },
+  // Wearables: exo display T*2,T*2; pedestal T*6,T*2; cozy T*9,T*2
+  { objectId: 'ap13', roomId: 'ap_wearables', x: ap_wearables_x + T * 3.5, y: ap_wearables_y + T * 3 },  // on exo display
+  { objectId: 'ap14', roomId: 'ap_wearables', x: ap_wearables_x + T * 7, y: ap_wearables_y + T * 3 },    // on pedestal
+  { objectId: 'ap15', roomId: 'ap_wearables', x: ap_wearables_x + T * 10, y: ap_wearables_y + T * 3 },   // on cozy area
 ];
 
 // Build collision map from all rooms

@@ -107,16 +107,20 @@ export class Renderer {
       ctx.fillStyle = room.outdoor ? '#EDF5E6' : colors.floor;
       ctx.fillRect(room.x, room.y, room.w, room.h);
 
-      // Floor tiles - alternating subtle pattern
-      const tileA = room.outdoor ? '#E5EDDE' : colors.floor;
-      const tileB = room.outdoor ? '#E0E8D8' : this.adjustAlpha(colors.wall, 0.12);
-      for (let tx = 0; tx < room.w / TILE; tx++) {
-        for (let ty = 0; ty < room.h / TILE; ty++) {
-          if ((tx + ty) % 2 === 0) {
-            ctx.fillStyle = tileB;
-            ctx.fillRect(room.x + tx * TILE, room.y + ty * TILE, TILE, TILE);
-          }
-        }
+      // Subtle floor grid lines
+      ctx.strokeStyle = room.outdoor ? 'rgba(0,0,0,0.03)' : 'rgba(0,0,0,0.025)';
+      ctx.lineWidth = 0.5;
+      for (let gx = room.x; gx <= room.x + room.w; gx += TILE) {
+        ctx.beginPath();
+        ctx.moveTo(gx, room.y);
+        ctx.lineTo(gx, room.y + room.h);
+        ctx.stroke();
+      }
+      for (let gy = room.y; gy <= room.y + room.h; gy += TILE) {
+        ctx.beginPath();
+        ctx.moveTo(room.x, gy);
+        ctx.lineTo(room.x + room.w, gy);
+        ctx.stroke();
       }
 
       // Subtle inner border glow (module accent)
