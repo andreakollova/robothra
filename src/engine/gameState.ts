@@ -7,11 +7,13 @@ import { resolveCollision, distanceBetween } from './collision';
 import { SaveData, loadGame, saveGame, QuizAttempt } from './save';
 import { playStep, playDiscovery } from './sound';
 
-// IDs of objects that have PNG sprites
+// IDs of objects that have PNG sprites (all 75)
 const _spriteIds = new Set([
-  'ir01','ir02','ir03','ir04','ir05','ir06','ir07','ir08','ir09','ir10',
-  'ir11','ir12','ir13','ir14','ir15',
-  'rb01','rb02','rb03','rb04','rb05','rb06','rb07','rb09','rb10','rb11','rb12',
+  'wr01','wr02','wr03','wr04','wr05','wr06','wr07','wr08','wr09','wr10','wr11','wr12','wr13','wr14','wr15',
+  'rb01','rb02','rb03','rb04','rb05','rb06','rb07','rb08','rb09','rb10','rb11','rb12','rb13','rb14','rb15',
+  'ir01','ir02','ir03','ir04','ir05','ir06','ir07','ir08','ir09','ir10','ir11','ir12','ir13','ir14','ir15',
+  'mr01','mr02','mr03','mr04','mr05','mr06','mr07','mr08','mr09','mr10','mr11','mr12','mr13','mr14','mr15',
+  'ap01','ap02','ap03','ap04','ap05','ap06','ap07','ap08','ap09','ap10','ap11','ap12','ap13','ap14','ap15',
 ]);
 
 const PLAYER_SPEED = 180;
