@@ -44,24 +44,24 @@ export interface ChallengeState {
   selfApproved: boolean | null; // for open-ended
 }
 
-export type FlashcardDifficulty = 'choose' | 'type';
-export type FlashcardCardType = 'image' | 'concept';
+export type FlashcardDifficulty = 'easy' | 'medium' | 'hard';
 
 export interface FlashcardCard {
   objectId: string;
-  cardType: FlashcardCardType; // image = show PNG guess name, concept = show description guess name
-  hasImage: boolean;
 }
 
 export interface FlashcardState {
   difficulty: FlashcardDifficulty;
-  module: ModuleName | null; // null = all modules
+  module: ModuleName | null;
   cards: FlashcardCard[];
   currentIndex: number;
-  options: string[]; // 4 option names for 'choose' mode
+  options: string[]; // 4 options for easy mode
   correctName: string;
-  typedAnswer: string;
-  phase: 'question' | 'correct' | 'incorrect';
+  correctDescription: string;
+  typedName: string;
+  typedDescription: string;
+  phase: 'question' | 'result';
+  wasCorrect: boolean;
   score: number;
   total: number;
 }
@@ -492,59 +492,79 @@ export class GameState {
 
   openFlashcards() {
     this.overlay = 'flashcards';
-    this.flashcardMode = null; // show setup screen
+    this.flashcardMode = null;
     this.playTimeActive = false;
   }
 
   startFlashcards(difficulty: FlashcardDifficulty, module: ModuleName | null) {
     const allObjects = module ? OBJECTS.filter(o => o.module === module) : [...OBJECTS];
-    // Shuffle
-    const shuffled = allObjects.sort(() => Math.random() - 0.5);
-
-    const cards: FlashcardCard[] = shuffled.map(obj => {
-      // Check if object has a loaded sprite
-      const hasImage = !!this._checkSprite(obj.id);
-      return {
-        objectId: obj.id,
-        cardType: hasImage ? 'image' : 'concept',
-        hasImage,
-      };
-    });
-
+    const shuffled = [...allObjects].sort(() => Math.random() - 0.5);
+    const cards: FlashcardCard[] = shuffled.map(obj => ({ objectId: obj.id }));
     if (cards.length === 0) return;
 
-    const firstCard = cards[0];
-    const firstObj = OBJECTS.find(o => o.id === firstCard.objectId)!;
-    const options = this._generateOptions(firstObj, allObjects);
+    const firstObj = OBJECTS.find(o => o.id === cards[0].objectId)!;
 
     this.flashcardMode = {
       difficulty,
       module,
       cards,
       currentIndex: 0,
-      options,
+      options: this._generateOptions(firstObj, allObjects),
       correctName: firstObj.name,
-      typedAnswer: '',
+      correctDescription: firstObj.description,
+      typedName: '',
+      typedDescription: '',
       phase: 'question',
+      wasCorrect: false,
       score: 0,
       total: cards.length,
     };
     this.overlay = 'flashcards';
   }
 
-  flashcardAnswer(answer: string) {
+  flashcardSubmitEasy(answer: string) {
     if (!this.flashcardMode || this.flashcardMode.phase !== 'question') return;
-    const correct = answer.toLowerCase().trim() === this.flashcardMode.correctName.toLowerCase().trim();
-    this.flashcardMode.phase = correct ? 'correct' : 'incorrect';
+    const correct = answer === this.flashcardMode.correctName;
+    this.flashcardMode.wasCorrect = correct;
     if (correct) this.flashcardMode.score++;
+    this.flashcardMode.phase = 'result';
+  }
+
+  flashcardSubmitMedium(typedName: string) {
+    if (!this.flashcardMode || this.flashcardMode.phase !== 'question') return;
+    this.flashcardMode.typedName = typedName;
+    // Fuzzy match - lowercase, trim, remove extra spaces
+    const normalize = (s: string) => s.toLowerCase().trim().replace(/\s+/g, ' ');
+    const correct = normalize(typedName) === normalize(this.flashcardMode.correctName);
+    this.flashcardMode.wasCorrect = correct;
+    if (correct) this.flashcardMode.score++;
+    this.flashcardMode.phase = 'result';
+  }
+
+  flashcardSubmitHard(typedName: string, typedDescription: string) {
+    if (!this.flashcardMode || this.flashcardMode.phase !== 'question') return;
+    this.flashcardMode.typedName = typedName;
+    this.flashcardMode.typedDescription = typedDescription;
+    const normalize = (s: string) => s.toLowerCase().trim().replace(/\s+/g, ' ');
+    const nameCorrect = normalize(typedName) === normalize(this.flashcardMode.correctName);
+    // For description, check if key words are present (at least 3 significant words from correct description)
+    const descWords = normalize(this.flashcardMode.correctDescription)
+      .split(' ')
+      .filter(w => w.length > 4); // only significant words
+    const userDesc = normalize(typedDescription);
+    const matchCount = descWords.filter(w => userDesc.includes(w)).length;
+    const descSufficient = matchCount >= Math.min(3, descWords.length);
+    const correct = nameCorrect && descSufficient;
+    this.flashcardMode.wasCorrect = correct;
+    if (correct) this.flashcardMode.score++;
+    this.flashcardMode.phase = 'result';
   }
 
   flashcardNext() {
     if (!this.flashcardMode) return;
     this.flashcardMode.currentIndex++;
     if (this.flashcardMode.currentIndex >= this.flashcardMode.cards.length) {
-      // Finished - stay on flashcards overlay to show final score
-      this.flashcardMode.phase = 'question'; // reuse for final screen
+      this.flashcardMode.phase = 'question'; // triggers results screen
       return;
     }
     const card = this.flashcardMode.cards[this.flashcardMode.currentIndex];
@@ -554,24 +574,15 @@ export class GameState {
       : [...OBJECTS];
     this.flashcardMode.options = this._generateOptions(obj, pool);
     this.flashcardMode.correctName = obj.name;
-    this.flashcardMode.typedAnswer = '';
+    this.flashcardMode.correctDescription = obj.description;
+    this.flashcardMode.typedName = '';
+    this.flashcardMode.typedDescription = '';
     this.flashcardMode.phase = 'question';
   }
 
   private _generateOptions(correct: typeof OBJECTS[0], pool: typeof OBJECTS): string[] {
     const others = pool.filter(o => o.id !== correct.id).sort(() => Math.random() - 0.5).slice(0, 3);
-    const options = [correct.name, ...others.map(o => o.name)];
-    return options.sort(() => Math.random() - 0.5);
-  }
-
-  // Simple sprite check - access the cache from renderer
-  private _checkSprite(objectId: string): boolean {
-    // Check if the image element exists in DOM cache
-    const img = new Image();
-    img.src = `/objects/${objectId}.png`;
-    // We can't synchronously check, so we rely on the preload
-    // Use a simple heuristic: check if file was in our asset list
-    return _spriteIds.has(objectId);
+    return [correct.name, ...others.map(o => o.name)].sort(() => Math.random() - 0.5);
   }
 
   getPlayTimeFormatted(): string {

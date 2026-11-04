@@ -589,155 +589,191 @@ export class UIManager {
   // ======================== FLASHCARDS ========================
   private renderFlashcards() {
     const fc = this.state.flashcardMode;
-
-    if (!fc) {
-      // Setup screen - choose difficulty and module
-      this.renderFlashcardSetup();
-      return;
-    }
-
-    // Check if finished
-    if (fc.currentIndex >= fc.cards.length) {
-      this.renderFlashcardResults();
-      return;
-    }
+    if (!fc) { this.renderFlashcardSetup(); return; }
+    if (fc.currentIndex >= fc.cards.length) { this.renderFlashcardResults(); return; }
 
     const card = fc.cards[fc.currentIndex];
     const obj = OBJECTS.find(o => o.id === card.objectId)!;
     const color = MODULE_CIRCLE_COLORS[obj.module] || '#888';
-    const panel = this.createPanel(520);
 
-    if (fc.phase === 'question') {
-      // Show the card
-      let cardContent = '';
-      if (card.cardType === 'image' && card.hasImage) {
-        // Show image, guess the name
-        cardContent = `
-          <div style="display:flex;justify-content:center;margin-bottom:20px">
-            <div style="width:200px;height:200px;border-radius:16px;background:#F8F9FA;display:flex;align-items:center;justify-content:center;border:2px solid #DCE3E8">
-              <img src="/objects/${obj.id}.png" style="width:170px;height:170px;object-fit:contain" alt="?">
-            </div>
-          </div>
-          <div style="font-size:14px;color:#627185;text-align:center;margin-bottom:16px">What is this component?</div>
-        `;
-      } else {
-        // Show description, guess the name
-        cardContent = `
-          <div style="background:#F8F9FA;border-radius:12px;padding:20px;margin-bottom:16px;border-left:4px solid ${color}">
-            <div style="font-size:14px;color:#263445;line-height:1.6">${obj.description}</div>
-          </div>
-          <div style="font-size:14px;color:#627185;text-align:center;margin-bottom:16px">What is this describing?</div>
-        `;
-      }
+    if (fc.phase === 'result') {
+      this.renderFlashcardFeedback(fc, obj, color);
+      return;
+    }
 
-      let answerArea = '';
-      if (fc.difficulty === 'choose') {
-        answerArea = `<div style="display:flex;flex-direction:column;gap:8px">
-          ${fc.options.map((opt, i) => `
-            <button class="quiz-option fc-option" data-answer="${opt.replace(/"/g, '&quot;')}">${opt}</button>
-          `).join('')}
-        </div>`;
-      } else {
-        answerArea = `
-          <input type="text" id="fc-type-input" style="width:100%;box-sizing:border-box;padding:12px;border:1.5px solid #DCE3E8;border-radius:8px;font-size:16px;font-family:inherit;outline:none;text-align:center" placeholder="Type the name..." value="${fc.typedAnswer}" autocomplete="off">
-          <button class="ui-btn primary" id="fc-type-submit" style="margin-top:12px">Check Answer</button>
-        `;
-      }
+    // Question phase
+    const panel = this.createPanel(540);
+    const imageHtml = `<div style="display:flex;justify-content:center;margin-bottom:16px">
+      <div style="width:180px;height:180px;border-radius:16px;background:#F8F9FA;display:flex;align-items:center;justify-content:center;border:1.5px solid #E2E5EA">
+        <img src="/objects/${obj.id}.png" style="width:150px;height:150px;object-fit:contain" alt="?">
+      </div>
+    </div>`;
 
-      panel.innerHTML = `<div style="padding:24px">
-        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px">
-          <div style="display:flex;align-items:center;gap:4px">
-            <span style="display:inline-block;width:10px;height:10px;border-radius:50%;background:${color}"></span>
-            <span style="font-size:12px;color:#627185;font-weight:500">${obj.module}</span>
-          </div>
-          <div style="font-size:12px;color:#90A4AE">${fc.currentIndex + 1} / ${fc.total} &middot; Score: ${fc.score}</div>
-        </div>
-        ${cardContent}
-        ${answerArea}
-        <button class="ui-btn secondary" id="fc-quit" style="margin-top:12px;font-size:12px">Quit Flashcards</button>
+    let questionHtml = '';
+    let answerHtml = '';
+    const diffLabel = fc.difficulty === 'easy' ? 'Easy' : fc.difficulty === 'medium' ? 'Medium' : 'Hard';
+
+    if (fc.difficulty === 'easy') {
+      questionHtml = `<div style="font-size:15px;color:#263445;text-align:center;margin-bottom:16px;font-weight:600">What is this?</div>`;
+      answerHtml = `<div style="display:flex;flex-direction:column;gap:8px">
+        ${fc.options.map(opt => `<button class="quiz-option fc-option" data-answer="${opt.replace(/"/g, '&quot;')}">${opt}</button>`).join('')}
       </div>`;
+    } else if (fc.difficulty === 'medium') {
+      questionHtml = `<div style="font-size:15px;color:#263445;text-align:center;margin-bottom:16px;font-weight:600">Type the name of this component</div>`;
+      answerHtml = `
+        <input type="text" id="fc-name-input" class="fc-input" placeholder="Name..." value="${fc.typedName}" autocomplete="off">
+        <button class="ui-btn primary" id="fc-submit" style="margin-top:12px">Check</button>
+      `;
+    } else {
+      questionHtml = `<div style="font-size:15px;color:#263445;text-align:center;margin-bottom:16px;font-weight:600">Name this component and describe what it does</div>`;
+      answerHtml = `
+        <input type="text" id="fc-name-input" class="fc-input" placeholder="Name..." value="${fc.typedName}" autocomplete="off">
+        <textarea id="fc-desc-input" class="fc-textarea" rows="3" placeholder="What does it do...">${fc.typedDescription}</textarea>
+        <button class="ui-btn primary" id="fc-submit" style="margin-top:12px">Check</button>
+      `;
+    }
 
-      // Event handlers
-      document.querySelectorAll('.fc-option').forEach(btn => {
-        btn.addEventListener('click', () => {
-          const answer = (btn as HTMLElement).dataset.answer!;
-          playUIClick();
-          this.state.flashcardAnswer(answer);
-          this.update();
-        });
+    panel.innerHTML = `<div style="padding:24px">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px">
+        <div style="display:flex;align-items:center;gap:6px">
+          <span style="display:inline-block;width:10px;height:10px;border-radius:50%;background:${color}"></span>
+          <span style="font-size:12px;color:#627185;font-weight:500">${obj.module}</span>
+          <span style="font-size:10px;color:#90A4AE;background:#F0F2F5;padding:2px 6px;border-radius:4px">${diffLabel}</span>
+        </div>
+        <div style="font-size:12px;color:#90A4AE">${fc.currentIndex + 1} / ${fc.total} &middot; Score: ${fc.score}</div>
+      </div>
+      ${imageHtml}
+      ${questionHtml}
+      ${answerHtml}
+      <button class="ui-btn secondary" id="fc-quit" style="margin-top:12px;font-size:12px">Quit</button>
+    </div>`;
+
+    // Easy mode - click option
+    document.querySelectorAll('.fc-option').forEach(btn => {
+      btn.addEventListener('click', () => {
+        playUIClick();
+        this.state.flashcardSubmitEasy((btn as HTMLElement).dataset.answer!);
+        this.update();
       });
+    });
 
-      const typeInput = document.getElementById('fc-type-input') as HTMLInputElement;
-      if (typeInput) {
-        typeInput.focus();
-        this.inputManager.setTyping(true);
-        typeInput.addEventListener('input', () => { fc.typedAnswer = typeInput.value; });
-        typeInput.addEventListener('focus', () => this.inputManager.setTyping(true));
-        typeInput.addEventListener('blur', () => this.inputManager.setTyping(false));
-        typeInput.addEventListener('keydown', (e) => {
+    // Medium/Hard mode - text inputs
+    const nameInput = document.getElementById('fc-name-input') as HTMLInputElement;
+    const descInput = document.getElementById('fc-desc-input') as HTMLTextAreaElement;
+
+    if (nameInput) {
+      nameInput.focus();
+      this.inputManager.setTyping(true);
+      nameInput.addEventListener('input', () => { fc.typedName = nameInput.value; });
+      nameInput.addEventListener('focus', () => this.inputManager.setTyping(true));
+      nameInput.addEventListener('blur', () => { if (!descInput) this.inputManager.setTyping(false); });
+      if (fc.difficulty === 'medium') {
+        nameInput.addEventListener('keydown', (e) => {
           if (e.key === 'Enter') {
             e.preventDefault();
-            fc.typedAnswer = typeInput.value;
             this.inputManager.setTyping(false);
-            this.state.flashcardAnswer(fc.typedAnswer);
+            this.state.flashcardSubmitMedium(nameInput.value);
             this.update();
           }
         });
       }
-      document.getElementById('fc-type-submit')?.addEventListener('click', () => {
-        if (typeInput) fc.typedAnswer = typeInput.value;
-        this.inputManager.setTyping(false);
-        playUIClick();
-        this.state.flashcardAnswer(fc.typedAnswer);
-        this.update();
-      });
-      document.getElementById('fc-quit')?.addEventListener('click', () => {
-        this.inputManager.setTyping(false);
-        playUIClick();
-        this.state.flashcardMode = null;
-        this.state.overlay = 'pause';
-        this.update();
-      });
-
-    } else {
-      // Show correct/incorrect feedback
-      const isCorrect = fc.phase === 'correct';
-      if (isCorrect) playCorrect(); else playIncorrect();
-
-      panel.innerHTML = `<div style="padding:24px;text-align:center">
-        <div style="width:48px;height:48px;border-radius:50%;background:${isCorrect ? '#E8F5E9' : '#FFEBEE'};display:inline-flex;align-items:center;justify-content:center;font-size:24px;margin-bottom:12px">
-          ${isCorrect ? '<span style="color:#4CAF50">&#10003;</span>' : '<span style="color:#F44336">&#10007;</span>'}
-        </div>
-        <h3 style="font-size:16px;font-weight:600;color:${isCorrect ? '#2E7D32' : '#C62828'};margin:0 0 8px">${isCorrect ? 'Correct!' : 'Not quite'}</h3>
-        <div style="display:flex;justify-content:center;margin-bottom:12px">
-          ${card.hasImage ? `<img src="/objects/${obj.id}.png" style="width:80px;height:80px;object-fit:contain" alt="">` : ''}
-        </div>
-        <div style="font-size:16px;font-weight:700;color:#263445;margin-bottom:4px">${obj.name}</div>
-        <div style="font-size:13px;color:#627185;margin-bottom:20px;line-height:1.5">${obj.description}</div>
-        <button class="ui-btn primary" id="fc-next">${fc.currentIndex + 1 >= fc.total ? 'See Results' : 'Next Card'}</button>
-      </div>`;
-
-      document.getElementById('fc-next')?.addEventListener('click', () => {
-        playUIClick();
-        this.state.flashcardNext();
-        this.update();
-      });
     }
+    if (descInput) {
+      descInput.addEventListener('input', () => { fc.typedDescription = descInput.value; });
+      descInput.addEventListener('focus', () => this.inputManager.setTyping(true));
+      descInput.addEventListener('blur', () => this.inputManager.setTyping(false));
+    }
+
+    document.getElementById('fc-submit')?.addEventListener('click', () => {
+      this.inputManager.setTyping(false);
+      playUIClick();
+      if (fc.difficulty === 'medium') {
+        this.state.flashcardSubmitMedium(nameInput?.value || '');
+      } else {
+        this.state.flashcardSubmitHard(nameInput?.value || '', descInput?.value || '');
+      }
+      this.update();
+    });
+
+    document.getElementById('fc-quit')?.addEventListener('click', () => {
+      this.inputManager.setTyping(false);
+      playUIClick();
+      this.state.flashcardMode = null;
+      this.state.overlay = 'pause';
+      this.update();
+    });
+  }
+
+  private renderFlashcardFeedback(fc: any, obj: any, color: string) {
+    const ok = fc.wasCorrect;
+    if (ok) playCorrect(); else playIncorrect();
+
+    const panel = this.createPanel(520);
+    let yourAnswerHtml = '';
+    if (fc.difficulty !== 'easy') {
+      yourAnswerHtml = `<div style="background:#F8F9FA;border-radius:8px;padding:10px;margin-bottom:12px;text-align:left">
+        <div style="font-size:11px;color:#90A4AE;margin-bottom:2px">Your answer:</div>
+        <div style="font-size:13px;color:#263445">${fc.typedName || '(empty)'}</div>
+        ${fc.difficulty === 'hard' && fc.typedDescription ? `<div style="font-size:12px;color:#627185;margin-top:4px">${fc.typedDescription}</div>` : ''}
+      </div>`;
+    }
+
+    panel.innerHTML = `<div style="padding:24px">
+      <div style="text-align:center;margin-bottom:16px">
+        <div style="width:48px;height:48px;border-radius:50%;background:${ok ? '#E8F5E9' : '#FFEBEE'};display:inline-flex;align-items:center;justify-content:center;font-size:24px">
+          ${ok ? '<span style="color:#4CAF50">&#10003;</span>' : '<span style="color:#F44336">&#10007;</span>'}
+        </div>
+      </div>
+      <div style="display:flex;justify-content:center;margin-bottom:12px">
+        <img src="/objects/${obj.id}.png" style="width:90px;height:90px;object-fit:contain" alt="">
+      </div>
+      <div style="text-align:center;margin-bottom:12px">
+        <div style="font-size:17px;font-weight:700;color:#263445">${obj.name}</div>
+        <div style="display:flex;align-items:center;justify-content:center;gap:4px;margin-top:4px">
+          <span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:${color}"></span>
+          <span style="font-size:11px;color:#627185">${obj.module}</span>
+        </div>
+      </div>
+      <div style="background:#E3F2FD;border-radius:10px;padding:14px;margin-bottom:12px">
+        <div style="font-size:11px;color:#1565C0;font-weight:600;margin-bottom:4px">What it does:</div>
+        <div style="font-size:13px;color:#263445;line-height:1.6">${obj.description}</div>
+      </div>
+      ${yourAnswerHtml}
+      <button class="ui-btn primary" id="fc-next">${fc.currentIndex + 1 >= fc.total ? 'See Results' : 'Next Card'}</button>
+    </div>`;
+
+    document.getElementById('fc-next')?.addEventListener('click', () => {
+      playUIClick();
+      this.state.flashcardNext();
+      this.update();
+    });
   }
 
   private renderFlashcardSetup() {
-    const panel = this.createPanel(440);
+    const panel = this.createPanel(460);
     panel.innerHTML = `<div style="padding:24px">
       <h2 style="font-size:18px;font-weight:700;color:#263445;margin:0 0 4px">Flashcards</h2>
-      <p style="font-size:13px;color:#627185;margin:0 0 20px">Test your knowledge of robotics components and concepts.</p>
+      <p style="font-size:13px;color:#627185;margin:0 0 20px">Test your knowledge of robotics components.</p>
 
       <div style="font-size:13px;font-weight:600;color:#263445;margin-bottom:8px">Difficulty</div>
-      <div style="display:flex;gap:8px;margin-bottom:20px">
-        <button class="quiz-option fc-diff selected" data-diff="choose" style="flex:1;justify-content:center">
-          <span>Choose from options</span>
+      <div style="display:flex;flex-direction:column;gap:6px;margin-bottom:20px">
+        <button class="quiz-option fc-diff selected" data-diff="easy" style="padding:12px">
+          <div>
+            <div style="font-weight:600;color:#4CAF50">Easy</div>
+            <div style="font-size:12px;color:#627185">See image, choose name from 4 options</div>
+          </div>
         </button>
-        <button class="quiz-option fc-diff" data-diff="type" style="flex:1;justify-content:center">
-          <span>Type the answer</span>
+        <button class="quiz-option fc-diff" data-diff="medium" style="padding:12px">
+          <div>
+            <div style="font-weight:600;color:#FF9800">Medium</div>
+            <div style="font-size:12px;color:#627185">See image, type the exact name</div>
+          </div>
+        </button>
+        <button class="quiz-option fc-diff" data-diff="hard" style="padding:12px">
+          <div>
+            <div style="font-weight:600;color:#F44336">Hard</div>
+            <div style="font-size:12px;color:#627185">See image, type name AND describe what it does</div>
+          </div>
         </button>
       </div>
 
@@ -760,7 +796,7 @@ export class UIManager {
       </div>
     </div>`;
 
-    let selectedDiff: FlashcardDifficulty = 'choose';
+    let selectedDiff: FlashcardDifficulty = 'easy';
     let selectedMod: string = 'all';
 
     document.querySelectorAll('.fc-diff').forEach(btn => {
@@ -783,8 +819,7 @@ export class UIManager {
 
     document.getElementById('fc-start')?.addEventListener('click', () => {
       playUIClick();
-      const mod = selectedMod === 'all' ? null : selectedMod as ModuleName;
-      this.state.startFlashcards(selectedDiff, mod);
+      this.state.startFlashcards(selectedDiff, selectedMod === 'all' ? null : selectedMod as ModuleName);
       this.update();
     });
 
