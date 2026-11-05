@@ -1355,16 +1355,19 @@ export function getModuleOpenEnded(module: string): Question[] {
   return QUESTIONS.filter(q => q.module === module && q.type === 'open_ended');
 }
 
-// Pick random N items from array
-function pickRandom<T>(arr: T[], n: number): T[] {
-  const shuffled = [...arr].sort(() => Math.random() - 0.5);
+// Pick random N items from array, preferring items NOT in usedIds
+function pickRandomAvoiding(arr: Question[], n: number, usedIds: Set<string>): Question[] {
+  const unused = arr.filter(q => !usedIds.has(q.id));
+  const pool = unused.length >= n ? unused : arr; // fallback to all if not enough unused
+  const shuffled = [...pool].sort(() => Math.random() - 0.5);
   return shuffled.slice(0, n);
 }
 
 // Get a challenge set for a module: 2 quizzes + 1 open-ended
-export function getChallengeSet(module: string): Question[] {
-  const quizzes = pickRandom(getModuleQuizzes(module), 2);
-  const openEnded = pickRandom(getModuleOpenEnded(module), 1);
+// Pass usedIds to avoid repeating questions across different objects
+export function getChallengeSet(module: string, usedIds: Set<string> = new Set()): Question[] {
+  const quizzes = pickRandomAvoiding(getModuleQuizzes(module), 2, usedIds);
+  const openEnded = pickRandomAvoiding(getModuleOpenEnded(module), 1, usedIds);
   return [...quizzes, ...openEnded];
 }
 

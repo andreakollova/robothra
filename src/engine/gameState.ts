@@ -83,6 +83,7 @@ export class GameState {
   practiceQueue: string[] = [];
   practiceIndex = 0;
   flashcardMode: FlashcardState | null = null;
+  private usedQuestionIds = new Set<string>(); // track shown questions to avoid repeats
 
   constructor() {
     this.save = loadGame();
@@ -197,13 +198,17 @@ export class GameState {
     const obj = OBJECTS.find(o => o.id === this.inspectingObjectId);
     if (!obj) { this.closeOverlay(); return; }
 
-    const questions = getChallengeSet(obj.module);
+    const questions = getChallengeSet(obj.module, this.usedQuestionIds);
     if (questions.length === 0) {
-      // No questions for this module - auto-collect
       this.collectObject(this.inspectingObjectId);
       this.closeOverlay();
       this.checkCompletion();
       return;
+    }
+
+    // Mark these questions as used so next object gets different ones
+    for (const q of questions) {
+      this.usedQuestionIds.add(q.id);
     }
 
     this.challenge = {
