@@ -27,7 +27,8 @@ export class HUD {
     if (state.overlay !== 'none') return;
 
     const ctx = this.ctx;
-    const w = this.canvas.width;
+    // Use logical width (CSS pixels), not physical canvas pixels
+    const w = this.canvas.width / (window.devicePixelRatio || 1);
 
     this.drawMinimap(ctx, w, state);
     this.drawStatus(ctx, state);
@@ -200,7 +201,7 @@ export class HUD {
     const pw = metrics.width + 32;
     const ph = 34;
     const px = canvasW / 2 - pw / 2;
-    const py = this.canvas.height - 64;
+    const py = (this.canvas.height / (window.devicePixelRatio || 1)) - 64;
 
     // Shadow
     ctx.shadowColor = 'rgba(53, 100, 216, 0.25)';

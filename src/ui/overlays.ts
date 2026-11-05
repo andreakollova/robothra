@@ -88,9 +88,9 @@ export class UIManager {
         <span style="font-size:12px;color:#627185;font-weight:500">${obj.module}</span>
       </div>
       <div style="display:flex;justify-content:center;margin-bottom:20px">
-        <div style="width:160px;height:160px;border-radius:16px;background:${color}15;display:flex;align-items:center;justify-content:center">
+        <div style="width:220px;height:220px;border-radius:16px;background:${color}10;display:flex;align-items:center;justify-content:center">
           ${getSpriteForObject(obj.id)
-            ? `<img src="/objects/${obj.id}.png" style="width:130px;height:130px;object-fit:contain" alt="${obj.name}">`
+            ? `<img src="/objects/${obj.id}.png" style="width:190px;height:190px;object-fit:contain;image-rendering:auto" alt="${obj.name}">`
             : `<div style="width:60px;height:60px;border-radius:50%;background:${color}"></div>`}
         </div>
       </div>
@@ -604,8 +604,8 @@ export class UIManager {
     // Question phase
     const panel = this.createPanel(540);
     const imageHtml = `<div style="display:flex;justify-content:center;margin-bottom:16px">
-      <div style="width:180px;height:180px;border-radius:16px;background:#F8F9FA;display:flex;align-items:center;justify-content:center;border:1.5px solid #E2E5EA">
-        <img src="/objects/${obj.id}.png" style="width:150px;height:150px;object-fit:contain" alt="?">
+      <div style="width:220px;height:220px;border-radius:16px;background:#F8F9FA;display:flex;align-items:center;justify-content:center;border:1.5px solid #E2E5EA">
+        <img src="/objects/${obj.id}.png" style="width:190px;height:190px;object-fit:contain;image-rendering:auto" alt="?">
       </div>
     </div>`;
 
@@ -725,7 +725,7 @@ export class UIManager {
         </div>
       </div>
       <div style="display:flex;justify-content:center;margin-bottom:12px">
-        <img src="/objects/${obj.id}.png" style="width:90px;height:90px;object-fit:contain" alt="">
+        <img src="/objects/${obj.id}.png" style="width:140px;height:140px;object-fit:contain;image-rendering:auto" alt="">
       </div>
       <div style="text-align:center;margin-bottom:12px">
         <div style="font-size:17px;font-weight:700;color:#263445">${obj.name}</div>

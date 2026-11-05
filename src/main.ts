@@ -14,8 +14,15 @@ const canvas = document.getElementById('game-canvas') as HTMLCanvasElement;
 const overlayContainer = document.getElementById('ui-overlay') as HTMLElement;
 
 function resizeCanvas() {
-  canvas.width = window.innerWidth;
-  canvas.height = window.innerHeight;
+  const dpr = window.devicePixelRatio || 1;
+  canvas.width = window.innerWidth * dpr;
+  canvas.height = window.innerHeight * dpr;
+  canvas.style.width = window.innerWidth + 'px';
+  canvas.style.height = window.innerHeight + 'px';
+  const ctx = canvas.getContext('2d')!;
+  ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+  ctx.imageSmoothingEnabled = true;
+  ctx.imageSmoothingQuality = 'high';
 }
 resizeCanvas();
 window.addEventListener('resize', resizeCanvas);
@@ -56,8 +63,8 @@ function gameLoop(now: number) {
   const dt = Math.min((now - lastTime) / 1000, 0.1); // Cap at 100ms
   lastTime = now;
 
-  // Resize camera if needed
-  camera.resize(canvas.width, canvas.height);
+  // Resize camera if needed (use logical size, not physical pixels)
+  camera.resize(window.innerWidth, window.innerHeight);
 
   // Get input
   const inputState = input.getState();
